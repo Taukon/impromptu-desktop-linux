@@ -8,10 +8,10 @@ import { Fcitx5 } from "./im/fcitx5";
 import { AppProcess } from "./appProcess";
 import { screenshot, converter } from "./x11lib";
 
-export const setXvfbIpcHandler = (): void => {
+export const setXvfbIpcHandler = (xvfbForCLI?: Xvfb): void => {
   // let im: Uim | Fcitx5 | Ibus | Scim | undefined;
   let imRun = false;
-  let xvfb: Xvfb | undefined;
+  let xvfb = xvfbForCLI;
 
   ipcMain.handle(
     "setXkbLayout",
@@ -66,14 +66,19 @@ export const setXvfbIpcHandler = (): void => {
       x?: number,
       y?: number,
     ) => {
-      xvfb = new Xvfb(displayNum, {
-        width: x && x > 0 ? x : 1200,
-        height: y && y > 0 ? y : 720,
-        depth: 24,
-      });
-      if (xvfb.start()) {
+      if (xvfb === undefined) {
+        xvfb = new Xvfb(displayNum, {
+          width: x && x > 0 ? x : 1200,
+          height: y && y > 0 ? y : 720,
+          depth: 24,
+        });
+        if (xvfb.start()) {
+          return true;
+        }
+      } else if (xvfb.isRun()) {
         return true;
       }
+
       return false;
     },
   );

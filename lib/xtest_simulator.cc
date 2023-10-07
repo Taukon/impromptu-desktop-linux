@@ -15,7 +15,6 @@ Napi::Value keyEvent(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    //Display *display = XOpenDisplay(NULL);
     std::string arg_str = info[0].As<Napi::String>();
     const char* display_name = arg_str.c_str();
     Display *display = XOpenDisplay(display_name);
@@ -33,18 +32,15 @@ Napi::Value keyEvent(const Napi::CallbackInfo &info)
         }
 
         XCloseDisplay(display);
-        //display = NULL;
     }
 
     return env.Null();
 }
 
-// TODO use Linux Input Subsystem
 Napi::Value keyEventXID(const Napi::CallbackInfo &info)
 {
    Napi::Env env = info.Env();
 
-    //Display *display = XOpenDisplay(NULL);
     std::string arg_str = info[0].As<Napi::String>();
     const char* display_name = arg_str.c_str();
     Display *display = XOpenDisplay(display_name);
@@ -62,7 +58,6 @@ Napi::Value keyEventXID(const Napi::CallbackInfo &info)
         }
 
         XCloseDisplay(display);
-        //display = NULL;
     }
 
     return env.Null();
@@ -72,7 +67,6 @@ Napi::Value motionEvent(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    //Display *display = XOpenDisplay(NULL);
     std::string arg_str = info[0].As<Napi::String>();
     const char* display_name = arg_str.c_str();
     Display *display = XOpenDisplay(display_name);
@@ -85,7 +79,6 @@ Napi::Value motionEvent(const Napi::CallbackInfo &info)
         XTestFakeMotionEvent(display, -1, x, y, 0L);
 
         XCloseDisplay(display);
-        //display = NULL;
     }
 
     return env.Null();
@@ -95,7 +88,6 @@ Napi::Value motionEventXID(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    //Display *display = XOpenDisplay(NULL);
     std::string arg_str = info[0].As<Napi::String>();
     const char* display_name = arg_str.c_str();
     int x = info[1].As<Napi::Number>().Int32Value();
@@ -168,7 +160,6 @@ Napi::Value buttonEvent(const Napi::CallbackInfo &info)
 {
     Napi::Env env = info.Env();
 
-    //Display *display = XOpenDisplay(NULL);
     std::string arg_str = info[0].As<Napi::String>();
     const char* display_name = arg_str.c_str();
     Display *display = XOpenDisplay(display_name);
@@ -217,7 +208,6 @@ Napi::Value buttonEvent(const Napi::CallbackInfo &info)
         }
 
         XCloseDisplay(display);
-        //display = NULL;
     }
 
     return env.Null();

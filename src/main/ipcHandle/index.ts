@@ -4,14 +4,15 @@ import { setShareAppIpcHandler } from "./shareApp";
 import { setInterfaceModeHandler } from "./interface";
 import { setXvfbIpcHandler } from "./shareApp/xvfb";
 import { CLIOption } from "../../util/type";
+import { Xvfb } from "./shareApp/xvfb/xvfb";
 
 export const initIpcHandler = (
   mainWindow: BrowserWindow,
   cli: CLIOption | undefined,
-  displayNum: number,
+  xvfbForCLI?: Xvfb,
 ): void => {
-  setInterfaceModeHandler(mainWindow, cli, displayNum);
-  setXvfbIpcHandler();
+  setInterfaceModeHandler(mainWindow, cli, xvfbForCLI);
+  setXvfbIpcHandler(xvfbForCLI);
 
   setShareAppIpcHandler();
   setShareFileIpcHandler(mainWindow);

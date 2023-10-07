@@ -4,7 +4,7 @@ import { initIpcHandler } from "./ipcHandle";
 import { checkCLI, checkCLIVirtual } from "./ipcHandle/interface";
 
 const cli = checkCLI();
-const displayNum = checkCLIVirtual(cli);
+const xvfbForCLI = checkCLIVirtual(cli);
 
 app.whenReady().then(async () => {
   const mainWindow = new BrowserWindow({
@@ -15,11 +15,11 @@ app.whenReady().then(async () => {
     },
   });
 
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development" && !xvfbForCLI?.isRun()) {
     mainWindow.webContents.openDevTools({ mode: "detach" });
   }
 
-  initIpcHandler(mainWindow, cli, displayNum);
+  initIpcHandler(mainWindow, cli, xvfbForCLI);
 
   Menu.setApplicationMenu(null);
   mainWindow.loadFile("dist/index.html");

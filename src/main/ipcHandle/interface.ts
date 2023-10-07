@@ -5,17 +5,17 @@ import { Xvfb } from "../ipcHandle/shareApp/xvfb/xvfb";
 export const setInterfaceModeHandler = (
   mainWindow: BrowserWindow,
   option: CLIOption | undefined,
-  displayNum: number,
+  xvfbForCLI?: Xvfb,
 ) => {
   if (option != undefined) {
     mainWindow.hide();
   }
 
   ipcMain.handle("Interface", async (): Promise<CLICheck | undefined> => {
-    if (option?.virtual) {
+    if (option?.virtual && xvfbForCLI?.isRun()) {
       return {
         virtual: {
-          displayNum: displayNum,
+          displayNum: xvfbForCLI.displayNum,
           width: option.virtual.width ?? 1200,
           height: option.virtual.height ?? 720,
           keyboard: option.virtual.keyboard ?? `jp`,
@@ -179,7 +179,9 @@ export const checkCLI = (): CLIOption | undefined => {
   return undefined;
 };
 
-export const checkCLIVirtual = (option: CLIOption | undefined): number => {
+export const checkCLIVirtual = (
+  option: CLIOption | undefined,
+): Xvfb | undefined => {
   if (option?.virtual != undefined) {
     for (let displayNum = 1; ; displayNum++) {
       const xvfb = new Xvfb(displayNum, {
@@ -189,10 +191,10 @@ export const checkCLIVirtual = (option: CLIOption | undefined): number => {
       });
 
       if (xvfb.start()) {
-        return displayNum;
+        return xvfb;
       }
     }
   }
 
-  return 0;
+  return undefined;
 };

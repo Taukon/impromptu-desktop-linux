@@ -146,12 +146,10 @@ export const initCLIShareVirtualApp = async (
   audio: boolean,
   xkbLayout: string,
   im: boolean,
-  width: number,
-  height: number,
 ): Promise<ShareHostApp | undefined> => {
-  const isStart = await window.shareApp.startXvfb(displayNum, width, height);
+  const displayName = await window.shareApp.getXDisplayEnv();
 
-  if (isStart) {
+  if (displayName === `:${displayNum}`) {
     await window.shareApp.setXkbLayout(displayNum, xkbLayout);
     if (im) {
       await window.shareApp.setInputMethod(displayNum);

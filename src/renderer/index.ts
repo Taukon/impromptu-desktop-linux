@@ -482,23 +482,21 @@ const startCLI = async (check: CLICheck) => {
           }
         });
       } else if (check.virtual) {
-        for (let displayNum = check.virtual.displayNum + 1; ; displayNum++) {
-          if (
-            await initCLIShareVirtualApp(
-              displayNum,
-              desktopId,
-              socket,
-              check.virtual.audio,
-              check.virtual.keyboard,
-              check.virtual.im,
-              check.virtual.width,
-              check.virtual.height,
-            )
-          ) {
-            if (check.virtual.app) {
-              window.shareApp.startX11App(displayNum, check.virtual.app);
-            }
-            break;
+        if (
+          await initCLIShareVirtualApp(
+            check.virtual.displayNum,
+            desktopId,
+            socket,
+            check.virtual.audio,
+            check.virtual.keyboard,
+            check.virtual.im,
+          )
+        ) {
+          if (check.virtual.app) {
+            window.shareApp.startX11App(
+              check.virtual.displayNum,
+              check.virtual.app,
+            );
           }
         }
       }
