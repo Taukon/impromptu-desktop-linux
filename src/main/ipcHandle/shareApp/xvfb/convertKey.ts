@@ -57,6 +57,8 @@ export const keySymToX11Key = (keyJson: KeyJson): number | undefined => {
     return x11KeyList.Henkan;
   } else if (name == "Hiragana") {
     return x11KeyList.Hiragana_Katakana;
+  } else if (name == " ") {
+    return x11KeyList.Space;
   } else if (name == "[") {
     return keyJson.key.charCode;
   } else if (name == "]") {
@@ -175,6 +177,8 @@ const x11KeyList = {
   R14: 0xffdf,
   F35: 0xffe0,
   R15: 0xffe0,
+
+  Space: 0x0020 /* U+0020 SPACE */,
 
   BackSpace: 0xff08 /* back space, back char */,
   Tab: 0xff09,

@@ -9,7 +9,7 @@ type Display = {
 
 export class Xvfb {
   public displayName: string;
-  private displayNum: number;
+  public displayNum: number;
   private display: Display = {
     width: 1200,
     height: 720,
@@ -44,7 +44,6 @@ export class Xvfb {
               this.display +
               ' is already in use and the "reuse" option is false.',
           );
-          //return false;
         } else {
           this.spawnProcess();
 
@@ -52,7 +51,6 @@ export class Xvfb {
           while (!this.checkLockFile()) {
             if (totalTime > this.timeout) {
               throw new Error("Could not start Xvfb.");
-              //return false;
             }
             this.usleep(10000);
             totalTime += 10;
@@ -80,7 +78,6 @@ export class Xvfb {
       while (this.checkLockFile()) {
         if (totalTime > this.timeout) {
           throw new Error("Could not stop Xvfb.");
-          //return false;
         }
         this.usleep(10000);
         totalTime += 10;
@@ -94,11 +91,7 @@ export class Xvfb {
 
   private spawnProcess() {
     this.process = spawn("Xvfb", [this.displayName].concat(this.xvfb_args));
-    // this.process.stdout.on('data', data => {
-    //     if (!this.silent) {
-    //         process.stdout.write(data);
-    //     }
-    // });
+
     this.process.stderr.on("data", (data) => {
       if (!this.silent) {
         process.stderr.write(data);
