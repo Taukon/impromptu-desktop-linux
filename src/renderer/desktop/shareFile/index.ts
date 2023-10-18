@@ -8,19 +8,9 @@ import {
   parseAppProtocol,
 } from "../../../protocol/renderer";
 import { appMaxId, appStatus, getRandomInt } from "../../../protocol/common";
-import { BrowserList, TransferList } from "./manage";
-import {
-  listenFileAnswerSDP,
-  listenFileOfferSDP,
-  sendFileAnswerSDP,
-  sendFileOfferSDP,
-} from "../signaling";
-import {
-  createPeerConnection,
-  setLocalOffer,
-  setRemoteAnswer,
-  setRemoteOffer,
-} from "../peerConnection";
+import { BrowserList } from "./manage";
+import { listenFileOfferSDP, sendFileAnswerSDP } from "../signaling";
+import { createPeerConnection, setRemoteOffer } from "../peerConnection";
 import { peerConnectionConfig } from "../../config";
 import { FileWatchList, FileWatchMsg } from "../monitorFile/type";
 import { updateFiles } from "../monitorFile";
@@ -31,7 +21,6 @@ import {
   ReqWriteFile,
 } from "./type";
 import { FileSDP } from "../signaling/type";
-import { getRandomStringId } from "./utils";
 
 export class ShareFile {
   public desktopId: string;
@@ -39,7 +28,6 @@ export class ShareFile {
   public dir?: string;
 
   public connectionList: BrowserList = {};
-  public transferList: TransferList = {}; //for readTransfer
 
   constructor(desktopId: string, socket: Socket) {
     this.desktopId = desktopId;
@@ -53,10 +41,6 @@ export class ShareFile {
   }
 
   private initConnection(browserId: string): boolean {
-    // if (Object.keys(this.connectionList).length == 0) {
-    //   this.startScreen();
-    // }
-
     if (this.connectionList[browserId]?.createTime) {
       this.closeConnection(browserId);
     }
@@ -81,10 +65,6 @@ export class ShareFile {
 
       delete this.connectionList[browserId];
     }
-
-    // if (Object.keys(this.connectionList).length == 0) {
-    //   this.stopDesktop();
-    // }
   }
 
   //-------------------------------------------------------------------------
@@ -95,7 +75,6 @@ export class ShareFile {
     const result = await window.shareFile.initFileWatch(dir);
     if (result) {
       this.listenOfferSDP();
-      this.listenAnswerSDP();
 
       this.dir = dir;
       window.shareFile.streamFileWatchMsg((data: FileWatchMsg) => {
@@ -132,6 +111,8 @@ export class ShareFile {
           this.initConnection(browserId);
         }
         await this.resFileWatchReq(browserId, fileSdp.sdp);
+      } else if (fileSdp.type === `readTransfer` && fileSdp.transferId) {
+        await this.resReadTransfer(browserId, fileSdp.transferId, fileSdp.sdp);
       } else if (fileSdp.type === `writeTransfer` && fileSdp.transferId) {
         await this.resWriteTransfer(browserId, fileSdp.transferId, fileSdp.sdp);
       }
@@ -139,19 +120,6 @@ export class ShareFile {
     listenFileOfferSDP(this.socket, listener);
   }
 
-  // listen Answer SDP
-  private listenAnswerSDP() {
-    const listener = async (browserId: unknown, fileSdp: FileSDP) => {
-      if (fileSdp.transferId) {
-        const answerSdp = fileSdp.sdp;
-        const connection = this.transferList[fileSdp.transferId];
-        if (connection) {
-          await setRemoteAnswer(answerSdp, connection);
-        }
-      }
-    };
-    listenFileAnswerSDP(this.socket, listener);
-  }
   //-------------------------------------------------------------------------
 
   // send Answer SDP
@@ -185,10 +153,7 @@ export class ShareFile {
             const parse = parseAppProtocol(
               new Uint8Array(ev.data as ArrayBuffer),
             );
-            if (parse.status === appStatus.fileRequestRead) {
-              const data: ReqReadFile = decodeParseData(parse.data);
-              this.reqReadTransfer(this.socket, browserId, data);
-            } else if (parse.status === appStatus.fileRequestList) {
+            if (parse.status === appStatus.fileRequestList) {
               if (this.dir) window.shareFile.sendFileWatch(this.dir);
             }
           };
@@ -215,66 +180,67 @@ export class ShareFile {
     return false;
   }
 
-  // send Offer SDP
-  private async reqReadTransfer(
-    socket: Socket,
+  // listen Offer SDP & send Answer SDP
+  private async resReadTransfer(
     browserId: string,
-    reqReadFile: ReqReadFile,
+    transferId: string,
+    offerSdp: string,
   ): Promise<void> {
-    const type = `readTransfer`;
-    const transferId = getRandomStringId();
-    const offerSDP = (sdp: string) =>
-      sendFileOfferSDP(socket, browserId, { type, sdp, transferId });
+    const answerSDP = (answerSDP: string) =>
+      sendFileAnswerSDP(this.socket, browserId, {
+        type: `readTransfer`,
+        sdp: answerSDP,
+        transferId,
+      });
 
-    const readConnection = createPeerConnection(offerSDP, peerConnectionConfig);
-    const readChannel = readConnection.createDataChannel(type, {
-      ordered: true,
-    });
+    const readConnection = createPeerConnection(
+      answerSDP,
+      peerConnectionConfig,
+    );
 
-    readChannel.onclose = () => {
-      delete this.transferList[transferId];
+    readConnection.ondatachannel = (event: RTCDataChannelEvent) => {
+      let accept = true;
+
+      event.channel.onmessage = async (ev) => {
+        const parse = parseAppProtocol(new Uint8Array(ev.data as ArrayBuffer));
+        if (parse.status === appStatus.fileRequestRead && accept) {
+          const reqReadFile: ReqReadFile = decodeParseData(parse.data);
+          const info = await window.shareFile.getFileInfo(reqReadFile.fileName);
+          if (info) {
+            accept = false;
+            const acceptReadFile: AcceptReadFile = {
+              fileName: info.fileName,
+              fileSize: info.fileSize,
+            };
+            const jsonString = JSON.stringify(acceptReadFile);
+            const data = createAppProtocolFromJson(
+              jsonString,
+              appStatus.fileAcceptRead,
+            );
+            event.channel.send(data);
+
+            // readTransfer
+            await this.readFile(
+              info.fileName,
+              info.fileSize,
+              transferId,
+              event.channel,
+            );
+          } else {
+            const id = getRandomInt(appMaxId);
+            const data = createAppProtocol(
+              Buffer.alloc(0),
+              id,
+              appStatus.fileError,
+              0,
+            );
+            event.channel.send(data);
+          }
+        }
+      };
     };
 
-    readChannel.onerror = () => {
-      delete this.transferList[transferId];
-    };
-
-    readChannel.onopen = async () => {
-      const info = await window.shareFile.getFileInfo(reqReadFile.fileName);
-      if (info) {
-        const acceptReadFile: AcceptReadFile = {
-          fileName: info.fileName,
-          fileSize: info.fileSize,
-        };
-        const jsonString = JSON.stringify(acceptReadFile);
-        const data = createAppProtocolFromJson(
-          jsonString,
-          appStatus.fileAcceptRead,
-        );
-        readChannel.send(data);
-
-        // readTransfer
-        await this.readFile(
-          info.fileName,
-          info.fileSize,
-          transferId,
-          readChannel,
-        );
-      } else {
-        const id = getRandomInt(appMaxId);
-        const data = createAppProtocol(
-          Buffer.alloc(0),
-          id,
-          appStatus.fileError,
-          0,
-        );
-        readChannel.send(data);
-      }
-    };
-
-    this.transferList[transferId] = readConnection;
-
-    await setLocalOffer(readConnection);
+    await setRemoteOffer(offerSdp, readConnection);
 
     return;
   }
@@ -349,13 +315,12 @@ export class ShareFile {
       await timer(2 * 1000);
       if (acceptWriteFile) {
         if (isClosed) {
-          // console.log(`write channel ${acceptWriteFile.fileName}`);
           break;
         }
         if (stamp === checkStamp) {
           limit--;
           if (limit == 0) {
-            console.log(`timeout recieve file: ${acceptWriteFile.fileName}`);
+            console.log(`timeout receive file: ${acceptWriteFile.fileName}`);
             window.shareFile.destroyRecvFileBuffer(acceptWriteFile.fileName);
 
             writeConnection.close();
@@ -418,19 +383,16 @@ export class ShareFile {
       total += chunk.byteLength;
       if (order === 0) {
         console.log(
-          `order: ${order} | chunkl: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`,
+          `order: ${order} | chunk len: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`,
         );
         const appData = createAppProtocol(chunk, id, appStatus.start, order);
         channel.send(appData);
       } else if (total < fileSize) {
-        // console.log(`m order: ${order} | chunkl: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`);
+        // console.log(`m order: ${order} | chunk len: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`);
         const appData = createAppProtocol(chunk, id, appStatus.middle, order);
         channel.send(appData);
       } else if (total === fileSize) {
-        console
-          .log
-          // `e order: ${order} | chunkl: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`,
-          ();
+        // console.log(`e order: ${order} | chunk len: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`);
         const appData = createAppProtocol(chunk, id, appStatus.end, order);
         channel.send(appData);
         break;
@@ -440,7 +402,7 @@ export class ShareFile {
 
       order++;
       chunk = await window.shareFile.getFileChunk(fileName, transferId);
-      await timer(loop); // usleep(1 * 1000);
+      await timer(loop);
     }
   };
 }
