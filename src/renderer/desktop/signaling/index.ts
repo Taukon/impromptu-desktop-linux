@@ -1,5 +1,21 @@
 import { Socket } from "socket.io-client";
-import { AppSDP, AuthInfo, FileSDP } from "./type";
+import { AppSDP, AuthInfo, FileSDP, ReqAuthProxyInfo } from "./type";
+
+export const reqAutoProxy = (
+  socket: Socket,
+  proxyId: string,
+  proxyPassword: string,
+  desktopId: string,
+  desktopPassword: string,
+) => {
+  const proxyInfo: ReqAuthProxyInfo = {
+    proxyId,
+    proxyPassword,
+    desktopId,
+    desktopPassword,
+  };
+  socket.emit("reqAutoProxy", proxyInfo);
+};
 
 export const listenAuth = (
   socket: Socket,

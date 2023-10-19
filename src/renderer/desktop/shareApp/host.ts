@@ -6,7 +6,6 @@ import { ControlData } from "../../../util/type";
 import { setControl } from "./connect";
 import { controlEventListener, controlEventListenerWID } from "../canvas";
 import { createPeerConnection, setRemoteOffer } from "../peerConnection";
-import { peerConnectionConfig } from "../../config";
 import { AppSDP } from "../signaling/type";
 import { sendAppProtocol } from "../../../protocol/renderer";
 import { timer } from "../../../util";
@@ -32,18 +31,21 @@ export class ShareHostApp {
 
   public connectionList: BrowserList = {};
   private screenChannels: { [browserId: string]: RTCDataChannel } = {};
+  private rtcConfiguration: RTCConfiguration;
 
   constructor(
     windowId: number,
     isDisplay: boolean,
     desktopId: string,
     socket: Socket,
+    rtcConfiguration: RTCConfiguration,
     videoStream: MediaStream,
     useScreenChannel: boolean,
     onControlDisplay: boolean,
   ) {
     this.desktopId = desktopId;
     this.socket = socket;
+    this.rtcConfiguration = rtcConfiguration;
 
     this.canvas.setAttribute("tabindex", String(0));
     this.video.srcObject = videoStream;
@@ -145,7 +147,7 @@ export class ShareHostApp {
 
       const screenConnection = createPeerConnection(
         answerSDP,
-        peerConnectionConfig,
+        this.rtcConfiguration,
       );
 
       screenConnection.ondatachannel = (event: RTCDataChannelEvent) => {
@@ -246,7 +248,7 @@ export class ShareHostApp {
 
       const screenConnection = createPeerConnection(
         answerSDP,
-        peerConnectionConfig,
+        this.rtcConfiguration,
       );
 
       const videoTracks = this.screenStream.getVideoTracks();
@@ -292,7 +294,7 @@ export class ShareHostApp {
 
       const controlConnection = createPeerConnection(
         answerSDP,
-        peerConnectionConfig,
+        this.rtcConfiguration,
       );
 
       controlConnection.ondatachannel = async (event: RTCDataChannelEvent) => {

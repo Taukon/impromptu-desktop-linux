@@ -18,3 +18,10 @@ export type FileSDP = {
   sdp: string;
   transferId?: string;
 };
+
+export type ReqAuthProxyInfo = {
+  proxyId: string;
+  proxyPassword: string;
+  desktopId: string;
+  desktopPassword: string;
+};

@@ -11,7 +11,6 @@ import { appMaxId, appStatus, getRandomInt } from "../../../protocol/common";
 import { BrowserList } from "./manage";
 import { listenFileOfferSDP, sendFileAnswerSDP } from "../signaling";
 import { createPeerConnection, setRemoteOffer } from "../peerConnection";
-import { peerConnectionConfig } from "../../config";
 import { FileWatchList, FileWatchMsg } from "../monitorFile/type";
 import { updateFiles } from "../monitorFile";
 import {
@@ -28,10 +27,16 @@ export class ShareFile {
   public dir?: string;
 
   public connectionList: BrowserList = {};
+  private rtcConfiguration: RTCConfiguration;
 
-  constructor(desktopId: string, socket: Socket) {
+  constructor(
+    desktopId: string,
+    socket: Socket,
+    rtcConfiguration: RTCConfiguration,
+  ) {
     this.desktopId = desktopId;
     this.socket = socket;
+    this.rtcConfiguration = rtcConfiguration;
   }
 
   public closeShareFile(): void {
@@ -136,7 +141,7 @@ export class ShareFile {
 
       const fileWatchConnection = createPeerConnection(
         answerSDP,
-        peerConnectionConfig,
+        this.rtcConfiguration,
       );
 
       fileWatchConnection.ondatachannel = (event: RTCDataChannelEvent) => {
@@ -195,7 +200,7 @@ export class ShareFile {
 
     const readConnection = createPeerConnection(
       answerSDP,
-      peerConnectionConfig,
+      this.rtcConfiguration,
     );
 
     readConnection.ondatachannel = (event: RTCDataChannelEvent) => {
@@ -266,7 +271,7 @@ export class ShareFile {
 
     const writeConnection = createPeerConnection(
       answerSDP,
-      peerConnectionConfig,
+      this.rtcConfiguration,
     );
 
     writeConnection.ondatachannel = (event: RTCDataChannelEvent) => {
