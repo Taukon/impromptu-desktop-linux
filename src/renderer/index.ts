@@ -521,6 +521,16 @@ const startCLI = async (check: CLICheck) => {
         setAuth(desktopId, socket, check.password);
         window.util.sendMessage(`desktopId: ${desktopId}`);
 
+        if (check.proxyId && check.proxyPassword) {
+          reqAutoProxy(
+            socket,
+            check.proxyId,
+            check.proxyPassword,
+            desktopId,
+            check.password,
+          );
+        }
+
         if (check.host) {
           initShareHostApp(
             desktopId,
