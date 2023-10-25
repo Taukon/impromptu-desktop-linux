@@ -61,7 +61,7 @@ const main = {
           to: path.resolve(__dirname, "dist") 
         },
         { 
-          from: path.resolve(__dirname, "./build/Release/xtest.node"), 
+          from: path.resolve(__dirname, "./build/Release/x11Simulator.node"), 
           to: path.resolve(__dirname, "dist") 
         },
       ],
