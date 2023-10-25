@@ -1,7 +1,6 @@
 import { Socket } from "socket.io-client";
 import { timer } from "../../../util";
 import {
-  AppHeader,
   createAppProtocol,
   createAppProtocolFromJson,
   decodeParseData,
@@ -20,6 +19,7 @@ import {
   ReqWriteFile,
 } from "./type";
 import { FileSDP } from "../signaling/type";
+import { readFileBuffer, writeFileBuffer } from "./utils";
 
 export class ShareFile {
   public desktopId: string;
@@ -204,33 +204,44 @@ export class ShareFile {
     );
 
     readConnection.ondatachannel = (event: RTCDataChannelEvent) => {
+      const id = getRandomInt(appMaxId);
+      let fileOrder = 0;
+      let fileTotal = 0;
       let accept = true;
+      let acceptReadFile: AcceptReadFile | undefined;
 
       event.channel.onmessage = async (ev) => {
         const parse = parseAppProtocol(new Uint8Array(ev.data as ArrayBuffer));
-        if (parse.status === appStatus.fileRequestRead && accept) {
+        if (parse.status === appStatus.fileRequestRead && acceptReadFile) {
+          const chunk = await window.shareFile.getFileChunk(
+            acceptReadFile.fileName,
+            transferId,
+          );
+          if (chunk !== null) {
+            const { order, total } = await readFileBuffer(
+              event.channel,
+              chunk,
+              acceptReadFile.fileSize,
+              id,
+              fileOrder,
+              fileTotal,
+            );
+            fileOrder = order;
+            fileTotal = total;
+          }
+        } else if (parse.status === appStatus.fileRequestRead && accept) {
           const reqReadFile: ReqReadFile = decodeParseData(parse.data);
-          const info = await window.shareFile.getFileInfo(reqReadFile.fileName);
-          if (info) {
+          acceptReadFile = await window.shareFile.getFileInfo(
+            reqReadFile.fileName,
+          );
+          if (acceptReadFile) {
             accept = false;
-            const acceptReadFile: AcceptReadFile = {
-              fileName: info.fileName,
-              fileSize: info.fileSize,
-            };
             const jsonString = JSON.stringify(acceptReadFile);
             const data = createAppProtocolFromJson(
               jsonString,
               appStatus.fileAcceptRead,
             );
             event.channel.send(data);
-
-            // readTransfer
-            await this.readFile(
-              info.fileName,
-              info.fileSize,
-              transferId,
-              event.channel,
-            );
           } else {
             const id = getRandomInt(appMaxId);
             const data = createAppProtocol(
@@ -279,8 +290,19 @@ export class ShareFile {
         const parse = parseAppProtocol(new Uint8Array(ev.data as ArrayBuffer));
         if (acceptWriteFile) {
           stamp = parse.order;
-          isClosed = await this.writeFile(parse, acceptWriteFile.fileName);
-          if (isClosed) writeConnection.close();
+          isClosed = await writeFileBuffer(parse, acceptWriteFile.fileName);
+          if (isClosed) {
+            writeConnection.close();
+          } else {
+            const id = getRandomInt(appMaxId);
+            const data = createAppProtocol(
+              Buffer.alloc(0),
+              id,
+              appStatus.fileAcceptWrite,
+              0,
+            );
+            event.channel.send(data);
+          }
         } else if (parse.status === appStatus.fileRequestWrite) {
           const reqWriteFile: ReqWriteFile = decodeParseData(parse.data);
           const isSet = await window.shareFile.setFileInfo(
@@ -336,78 +358,6 @@ export class ShareFile {
         }
       }
     }
-
     return;
   }
-
-  private writeFile = async (
-    parse: AppHeader,
-    fileName: string,
-  ): Promise<boolean> => {
-    if (parse.status === appStatus.start) {
-      await window.shareFile.recvFileBuffer(fileName, parse.data);
-      return false;
-    } else if (parse.status === appStatus.middle) {
-      await window.shareFile.recvFileBuffer(fileName, parse.data);
-      return false;
-    } else if (parse.status === appStatus.end) {
-      await window.shareFile.recvFileBuffer(fileName, parse.data);
-
-      return true;
-    }
-
-    window.shareFile.destroyRecvFileBuffer(fileName);
-    return true;
-  };
-
-  private readFile = async (
-    fileName: string,
-    fileSize: number,
-    transferId: string,
-    channel: RTCDataChannel,
-  ): Promise<void> => {
-    const id = getRandomInt(appMaxId);
-    let order = 0;
-    let total = 0;
-    const loop = 5;
-
-    let chunk = await window.shareFile.getFileChunk(fileName, transferId);
-
-    if (chunk === null) {
-      const appData = createAppProtocol(
-        Buffer.alloc(0),
-        id,
-        appStatus.start,
-        order,
-      );
-      channel.send(appData);
-      return;
-    }
-
-    while (chunk !== null) {
-      total += chunk.byteLength;
-      if (order === 0) {
-        console.log(
-          `order: ${order} | chunk len: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`,
-        );
-        const appData = createAppProtocol(chunk, id, appStatus.start, order);
-        channel.send(appData);
-      } else if (total < fileSize) {
-        // console.log(`m order: ${order} | chunk len: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`);
-        const appData = createAppProtocol(chunk, id, appStatus.middle, order);
-        channel.send(appData);
-      } else if (total === fileSize) {
-        // console.log(`e order: ${order} | chunk len: ${chunk.byteLength} | fileSize: ${fileSize} | total: ${total}`);
-        const appData = createAppProtocol(chunk, id, appStatus.end, order);
-        channel.send(appData);
-        break;
-      } else {
-        break;
-      }
-
-      order++;
-      chunk = await window.shareFile.getFileChunk(fileName, transferId);
-      await timer(loop);
-    }
-  };
 }
