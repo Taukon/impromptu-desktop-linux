@@ -306,10 +306,19 @@ export class ShareHostApp {
         };
 
         const displayName = await window.shareApp.getXDisplayEnv();
-        const control = (data: ControlData) =>
-          this.isDisplay
-            ? window.shareApp.control(displayName, data)
-            : window.shareApp.controlWID(displayName, this.windowId, data);
+        const control = (data: ControlData) => {
+          if (this.isDisplay) {
+            if (data.move?.x && data.move.y && data.move.cw && data.move.ch) {
+              data.move.x =
+                (data.move.x * this.video.videoWidth) / data.move.cw;
+              data.move.y =
+                (data.move.y * this.video.videoHeight) / data.move.ch;
+            }
+            return window.shareApp.control(displayName, data);
+          } else {
+            return window.shareApp.controlWID(displayName, this.windowId, data);
+          }
+        };
 
         setControl(event.channel, control);
       };
