@@ -15,6 +15,7 @@ export const setAuth = (
 export const initShareHostApp = async (
   desktopId: string,
   socket: Socket,
+  rtcConfiguration: RTCConfiguration,
   sourceId: string,
   isDesktop: boolean,
   useScreenChannel: boolean,
@@ -48,6 +49,7 @@ export const initShareHostApp = async (
       isDesktop,
       desktopId,
       socket,
+      rtcConfiguration,
       stream,
       useScreenChannel,
       onControlDisplay,
@@ -62,6 +64,7 @@ export const initShareVirtualApp = async (
   displayNum: number,
   desktopId: string,
   socket: Socket,
+  rtcConfiguration: RTCConfiguration,
   onControlDisplay: boolean,
   audio: boolean,
   isFullScreen: boolean,
@@ -99,6 +102,7 @@ export const initShareVirtualApp = async (
             displayNum,
             desktopId,
             socket,
+            rtcConfiguration,
             onControlDisplay,
             isFullScreen,
             useInterval,
@@ -111,6 +115,7 @@ export const initShareVirtualApp = async (
             displayNum,
             desktopId,
             socket,
+            rtcConfiguration,
             onControlDisplay,
             isFullScreen,
             useInterval,
@@ -124,6 +129,7 @@ export const initShareVirtualApp = async (
         displayNum,
         desktopId,
         socket,
+        rtcConfiguration,
         onControlDisplay,
         isFullScreen,
         useInterval,
@@ -135,14 +141,19 @@ export const initShareVirtualApp = async (
   return undefined;
 };
 
-export const initShareFile = (desktopId: string, socket: Socket): ShareFile => {
-  return new ShareFile(desktopId, socket);
+export const initShareFile = (
+  desktopId: string,
+  socket: Socket,
+  rtcConfiguration: RTCConfiguration,
+): ShareFile => {
+  return new ShareFile(desktopId, socket, rtcConfiguration);
 };
 
 export const initCLIShareVirtualApp = async (
   displayNum: number,
   desktopId: string,
   socket: Socket,
+  rtcConfiguration: RTCConfiguration,
   audio: boolean,
   xkbLayout: string,
   im: boolean,
@@ -162,6 +173,7 @@ export const initCLIShareVirtualApp = async (
       const shareApp = await initShareHostApp(
         desktopId,
         socket,
+        rtcConfiguration,
         sourceId,
         true,
         false,
@@ -175,6 +187,7 @@ export const initCLIShareVirtualApp = async (
         const shareApp = await initShareHostApp(
           desktopId,
           socket,
+          rtcConfiguration,
           sourceId,
           true,
           false,

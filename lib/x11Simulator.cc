@@ -75,6 +75,12 @@ Napi::Value motionEvent(const Napi::CallbackInfo &info)
     {
         int x = info[1].As<Napi::Number>().Int32Value();
         int y = info[2].As<Napi::Number>().Int32Value();
+        // int wWidth = info[3].As<Napi::Number>().Int32Value();
+        // int wHeight = info[4].As<Napi::Number>().Int32Value();
+        // int width = XDisplayWidth(display, 0);
+        // int height = XDisplayHeight(display, 0);
+        // x = x * width / wWidth;
+        // y = y * height / wHeight;
 
         XTestFakeMotionEvent(display, -1, x, y, 0L);
 
@@ -92,7 +98,9 @@ Napi::Value motionEventXID(const Napi::CallbackInfo &info)
     const char* display_name = arg_str.c_str();
     int x = info[1].As<Napi::Number>().Int32Value();
     int y = info[2].As<Napi::Number>().Int32Value();
-    xcb_window_t window = info[3].As<Napi::Number>().Int32Value();
+    int wWidth = info[3].As<Napi::Number>().Int32Value();
+    int wHeight = info[4].As<Napi::Number>().Int32Value();
+    xcb_window_t window = info[5].As<Napi::Number>().Int32Value();
 
     xcb_connection_t *connection;
     xcb_query_tree_cookie_t tree_cookie;
@@ -134,12 +142,10 @@ Napi::Value motionEventXID(const Napi::CallbackInfo &info)
         return env.Null();
     }
 
-    // printf("X: %d\n", geometry->x);
-    // printf("Y: %d\n", geometry->y);
-    // printf("PX: %d\n", parent_geometry->x);
-    // printf("PY: %d\n", parent_geometry->y);
     int base_x = parent_geometry->x + geometry->x;
     int base_y = parent_geometry->y + geometry->y;
+    x = x * geometry->width / wWidth;
+    y = y * geometry->height / wHeight;
     
     free(geometry);
     free(tree_reply);
@@ -228,4 +234,4 @@ Napi::Object Init(Napi::Env env, Napi::Object exports)
     return exports;
 }
 
-NODE_API_MODULE(xtest, Init);
+NODE_API_MODULE(x11Simulator, Init);

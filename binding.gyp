@@ -4,7 +4,7 @@
       "target_name": "screenshot",
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],
-      "sources": [ "lib/fb_screenshot.cc" ],
+      "sources": [ "lib/screenshot.cc" ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")"
       ],
@@ -17,7 +17,7 @@
       "target_name": "converter",
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],
-      "sources": [ "lib/fb_converter.cc" ],
+      "sources": [ "lib/converter.cc" ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")"
       ],
@@ -27,10 +27,10 @@
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
     },
     {
-        "target_name": "xtest",
+        "target_name": "x11Simulator",
         "cflags!": ["-fno-exceptions"],
         "cflags_cc!": ["-fno-exceptions"],
-        "sources": ["lib/xtest_simulator.cc"],
+        "sources": ["lib/x11Simulator.cc"],
         "include_dirs": [
             "<!@(node -p \"require('node-addon-api').include\")"
         ],

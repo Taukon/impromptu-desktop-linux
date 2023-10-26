@@ -5,7 +5,6 @@ import { listenAppOfferSDP, sendAppAnswerSDP } from "../signaling";
 import { ControlData } from "../../../util/type";
 import { setControl } from "./connect";
 import { createPeerConnection, setRemoteOffer } from "../peerConnection";
-import { peerConnectionConfig } from "../../config";
 import { controlEventListener, displayScreen } from "../canvas";
 import { AppSDP } from "../signaling/type";
 import { sendAppProtocol } from "../../../protocol/renderer";
@@ -34,17 +33,20 @@ export class ShareVirtualApp {
 
   public connectionList: BrowserList = {};
   private screenChannels: { [browserId: string]: RTCDataChannel } = {};
+  private rtcConfiguration: RTCConfiguration;
 
   constructor(
     displayNum: number,
     desktopId: string,
     socket: Socket,
+    rtcConfiguration: RTCConfiguration,
     onControlDisplay: boolean,
     isFullScreen: boolean,
     useInterval: boolean,
     audioStream?: MediaStream,
   ) {
     this.displayName = `:${displayNum}`;
+    this.rtcConfiguration = rtcConfiguration;
 
     this.desktopId = desktopId;
     this.socket = socket;
@@ -137,7 +139,7 @@ export class ShareVirtualApp {
 
       const screenConnection = createPeerConnection(
         answerSDPr,
-        peerConnectionConfig,
+        this.rtcConfiguration,
       );
       screenConnection.ondatachannel = (event: RTCDataChannelEvent) => {
         event.channel.onopen = () => {
@@ -190,7 +192,7 @@ export class ShareVirtualApp {
 
       const screenConnection = createPeerConnection(
         answerSDP,
-        peerConnectionConfig,
+        this.rtcConfiguration,
       );
 
       const audioTracks = this.audioStream.getAudioTracks();
@@ -228,7 +230,7 @@ export class ShareVirtualApp {
 
       const controlConnection = createPeerConnection(
         answerSDP,
-        peerConnectionConfig,
+        this.rtcConfiguration,
       );
 
       controlConnection.ondatachannel = (event: RTCDataChannelEvent) => {

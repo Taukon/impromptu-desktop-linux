@@ -1,6 +1,6 @@
 import { desktopCapturer, ipcMain } from "electron";
 import { ControlData, DisplayInfo, KeyJson } from "../../../util/type";
-import { xtest } from "./xvfb/x11lib";
+import { x11Simulator } from "./xvfb/x11lib";
 import { keySymToX11Key } from "./xvfb/convertKey";
 
 export const setShareAppIpcHandler = (): void => {
@@ -25,10 +25,21 @@ export const setShareAppIpcHandler = (): void => {
       displayName: string,
       data: ControlData,
     ) => {
-      if (data.move?.x != undefined && data.move?.y != undefined) {
+      if (
+        data.move?.x != undefined &&
+        data.move?.y != undefined &&
+        data.move.cw != undefined &&
+        data.move.ch != undefined
+      ) {
         try {
           //console.log("try: "+data.move.x +" :"+ data.move.y);
-          xtest.motionEvent(displayName, data.move.x, data.move.y);
+          x11Simulator.motionEvent(
+            displayName,
+            data.move.x,
+            data.move.y,
+            data.move.cw,
+            data.move.ch,
+          );
         } catch (error) {
           console.error(error);
         }
@@ -38,7 +49,7 @@ export const setShareAppIpcHandler = (): void => {
       ) {
         try {
           //console.log("try: " + data.button.buttonMask + " : " + data.button.down);
-          xtest.buttonEvent(
+          x11Simulator.buttonEvent(
             displayName,
             data.button.buttonMask,
             data.button.down,
@@ -50,7 +61,7 @@ export const setShareAppIpcHandler = (): void => {
         try {
           const key = keySymToX11Key(data as KeyJson);
           if (key) {
-            xtest.keyEvent(displayName, key, data.key.down);
+            x11Simulator.keyEvent(displayName, key, data.key.down);
           }
         } catch (error) {
           console.error(error);
@@ -67,10 +78,22 @@ export const setShareAppIpcHandler = (): void => {
       windowId: number,
       data: ControlData,
     ) => {
-      if (data.move?.x != undefined && data.move?.y != undefined) {
+      if (
+        data.move?.x != undefined &&
+        data.move?.y != undefined &&
+        data.move.cw != undefined &&
+        data.move.ch != undefined
+      ) {
         try {
           //console.log("try: "+data.move.x +" :"+ data.move.y);
-          xtest.motionEventXID(displayName, data.move.x, data.move.y, windowId);
+          x11Simulator.motionEventXID(
+            displayName,
+            data.move.x,
+            data.move.y,
+            data.move.cw,
+            data.move.ch,
+            windowId,
+          );
         } catch (error) {
           console.error(error);
         }
@@ -80,7 +103,7 @@ export const setShareAppIpcHandler = (): void => {
       ) {
         try {
           //console.log("try: " + data.button.buttonMask + " : " + data.button.down);
-          xtest.buttonEvent(
+          x11Simulator.buttonEvent(
             displayName,
             data.button.buttonMask,
             data.button.down,
@@ -92,7 +115,7 @@ export const setShareAppIpcHandler = (): void => {
         try {
           const key = keySymToX11Key(data as KeyJson);
           if (key) {
-            xtest.keyEventXID(displayName, key, data.key.down, windowId);
+            x11Simulator.keyEventXID(displayName, key, data.key.down, windowId);
           }
         } catch (error) {
           console.error(error);

@@ -16,8 +16,15 @@ export const controlEventListener = (
 ): void => {
   canvas.addEventListener(
     "mousedown",
-    () => {
+    (event) => {
       const button = { button: { buttonMask: 0x1, down: true } };
+      if (event.button === 1) {
+        // middle click
+        button.button.buttonMask = 0x2;
+      } else if (event.button === 2) {
+        // left click
+        button.button.buttonMask = 0x4;
+      }
       window.shareApp.control(displayName, button);
       //console.log("mousedown: " + JSON.stringify(event));
     },
@@ -25,8 +32,15 @@ export const controlEventListener = (
   );
   canvas.addEventListener(
     "mouseup",
-    () => {
+    (event) => {
       const button = { button: { buttonMask: 0x1, down: false } };
+      if (event.button === 1) {
+        // middle click
+        button.button.buttonMask = 0x2;
+      } else if (event.button === 2) {
+        // left click
+        button.button.buttonMask = 0x4;
+      }
       window.shareApp.control(displayName, button);
       //console.log("mouseup: " + JSON.stringify(event));
     },
@@ -121,8 +135,15 @@ export const controlEventListenerWID = (
 ): void => {
   canvas.addEventListener(
     "mousedown",
-    () => {
+    (event) => {
       const button = { button: { buttonMask: 0x1, down: true } };
+      if (event.button === 1) {
+        // middle click
+        button.button.buttonMask = 0x2;
+      } else if (event.button === 2) {
+        // left click
+        button.button.buttonMask = 0x4;
+      }
       window.shareApp.controlWID(displayName, windowId, button);
       //console.log("mousedown: " + JSON.stringify(event));
     },
@@ -130,8 +151,15 @@ export const controlEventListenerWID = (
   );
   canvas.addEventListener(
     "mouseup",
-    () => {
+    (event) => {
       const button = { button: { buttonMask: 0x1, down: false } };
+      if (event.button === 1) {
+        // middle click
+        button.button.buttonMask = 0x2;
+      } else if (event.button === 2) {
+        // left click
+        button.button.buttonMask = 0x4;
+      }
       window.shareApp.controlWID(displayName, windowId, button);
       //console.log("mouseup: " + JSON.stringify(event));
     },
