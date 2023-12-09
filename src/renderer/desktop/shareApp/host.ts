@@ -415,7 +415,7 @@ export class ShareHostApp {
         const videoFrame = new VideoFrame(this.video);
         this.frameCount++;
 
-        if (this.frameCount % 30 === 0) {
+        if (this.frameCount % 10 === 0) {
           this.videoEncoder.encode(videoFrame, { keyFrame: true });
           this.frameCount = 0;
         } else {
