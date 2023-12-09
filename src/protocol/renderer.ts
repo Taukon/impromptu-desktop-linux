@@ -136,3 +136,32 @@ export const appendBuffer = (buffer1: Uint8Array, buffer2: Uint8Array) => {
   tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
   return tmp;
 };
+
+export const parseEncodedFrame = (
+  videoChunk: Uint8Array,
+): { keyFrame: boolean; data: Uint8Array } => {
+  const videoHeader = 1;
+  const chunkHeader = new DataView(videoChunk.slice(0, videoHeader).buffer);
+
+  const keyFrame = chunkHeader.getUint8(0);
+  const data = videoChunk.slice(videoHeader);
+
+  return {
+    keyFrame: keyFrame === 0x1 ? true : false,
+    data: data,
+  };
+};
+
+export const createEncodedFrame = (
+  videoBuffer: Uint8Array,
+  keyFrame: boolean,
+): Uint8Array => {
+  const videoHeader = 1;
+  const chunkHeader = new Uint8Array(videoHeader);
+  const dataChunkHeader = new DataView(chunkHeader.buffer);
+
+  dataChunkHeader.setUint8(0, keyFrame ? 0x1 : 0x0);
+
+  const videoChunk = appendBuffer(chunkHeader, videoBuffer);
+  return videoChunk;
+};

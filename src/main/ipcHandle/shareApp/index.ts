@@ -85,7 +85,7 @@ export const setShareAppIpcHandler = (): void => {
         data.move.ch != undefined
       ) {
         try {
-          //console.log("try: "+data.move.x +" :"+ data.move.y);
+          // console.log(`try: x:${data.move.x} | y: ${data.move.y} | cw: ${data.move.cw} | ch: ${data.move.ch} | wid:${windowId}`);
           x11Simulator.motionEventXID(
             displayName,
             data.move.x,
