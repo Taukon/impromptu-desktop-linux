@@ -14,7 +14,7 @@ export const initIpcHandler = (
   setInterfaceModeHandler(mainWindow, cli, xvfbForCLI);
   setXvfbIpcHandler(xvfbForCLI);
 
-  setShareAppIpcHandler();
+  setShareAppIpcHandler(mainWindow);
   setShareFileIpcHandler(mainWindow);
 
   ipcMain.handle("getBasePath", () => {

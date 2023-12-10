@@ -12,7 +12,6 @@ import {
   parseAppProtocol,
   sendAppProtocol,
 } from "../../../protocol/renderer";
-import { timer } from "../../../util";
 import { appStatus } from "../../../protocol/common";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -33,10 +32,9 @@ export class ShareVirtualApp {
   private audioStream?: MediaStream;
   public screen: HTMLCanvasElement | HTMLVideoElement;
 
-  private useInterval: boolean;
   private interval = 30;
 
-  private frameCount = 0;
+  private keyFrame = false;
   private videoEncoder = new VideoEncoder({
     output: (chunk) => {
       const videoBuffer = new Uint8Array(chunk.byteLength);
@@ -73,7 +71,6 @@ export class ShareVirtualApp {
     rtcConfiguration: RTCConfiguration,
     onControlDisplay: boolean,
     isFullScreen: boolean,
-    useInterval: boolean,
     audioStream?: MediaStream,
   ) {
     this.displayName = `:${displayNum}`;
@@ -81,8 +78,6 @@ export class ShareVirtualApp {
 
     this.desktopId = desktopId;
     this.socket = socket;
-
-    this.useInterval = useInterval;
 
     this.canvas.setAttribute("tabindex", String(0));
     this.image.onload = () => {
@@ -105,10 +100,9 @@ export class ShareVirtualApp {
       this.canvas.getContext("2d")?.drawImage(this.image, 0, 0);
 
       const videoFrame = new VideoFrame(this.image, { timestamp: 0 });
-      this.frameCount++;
-      if (this.frameCount % 30 === 0) {
+
+      if (this.keyFrame) {
         this.videoEncoder.encode(videoFrame, { keyFrame: true });
-        this.frameCount = 0;
       } else {
         this.videoEncoder.encode(videoFrame);
       }
@@ -213,6 +207,7 @@ export class ShareVirtualApp {
 
         event.channel.onmessage = () => {
           // displayScreen(this.image, this.preJpegBuffer);
+          this.preJpegBuffer = Buffer.alloc(0);
         };
       };
 
@@ -334,40 +329,57 @@ export class ShareVirtualApp {
   }
 
   private startScreen(): void {
-    if (this.useInterval) {
-      setInterval(async () => {
-        try {
-          const img = await this.screenShot(this.displayName);
-          if (img) {
-            // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
-            //   displayScreen(this.image, img);
-            //   this.preJpegBuffer = Buffer.from(img.buffer);
-            // }
+    window.shareApp.sendScreenFrame(async (keyFrame: boolean) => {
+      this.keyFrame = keyFrame;
+      try {
+        const img = await this.screenShot(this.displayName);
+        if (img) {
+          if (Buffer.compare(img, this.preJpegBuffer) != 0) {
             displayScreen(this.image, img);
+            this.preJpegBuffer = Buffer.from(img.buffer);
           }
-        } catch (err) {
-          console.log(err);
+          // displayScreen(this.image, img);
         }
-      }, this.interval);
-    } else {
-      const loop = async () => {
-        try {
-          const img = await this.screenShot(this.displayName);
-          if (img) {
-            // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
-            //   displayScreen(this.image, img);
-            //   this.preJpegBuffer = Buffer.from(img.buffer);
-            // }
-            displayScreen(this.image, img);
-          }
-        } catch (err) {
-          console.log(err);
-        }
+      } catch (err) {
+        console.log(err);
+      }
+    });
+    window.shareApp.requestScreenFrame(this.interval);
 
-        await timer(this.interval);
-        requestAnimationFrame(loop);
-      };
-      requestAnimationFrame(loop);
-    }
+    // if (this.useInterval) {
+    //   setInterval(async () => {
+    //     try {
+    //       const img = await this.screenShot(this.displayName);
+    //       if (img) {
+    //         // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
+    //         //   displayScreen(this.image, img);
+    //         //   this.preJpegBuffer = Buffer.from(img.buffer);
+    //         // }
+    //         displayScreen(this.image, img);
+    //       }
+    //     } catch (err) {
+    //       console.log(err);
+    //     }
+    //   }, this.interval);
+    // } else {
+    //   const loop = async () => {
+    //     try {
+    //       const img = await this.screenShot(this.displayName);
+    //       if (img) {
+    //         // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
+    //         //   displayScreen(this.image, img);
+    //         //   this.preJpegBuffer = Buffer.from(img.buffer);
+    //         // }
+    //         displayScreen(this.image, img);
+    //       }
+    //     } catch (err) {
+    //       console.log(err);
+    //     }
+
+    //     await timer(this.interval);
+    //     requestAnimationFrame(loop);
+    //   };
+    //   requestAnimationFrame(loop);
+    // }
   }
 }

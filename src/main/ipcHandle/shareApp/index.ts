@@ -1,9 +1,41 @@
-import { desktopCapturer, ipcMain } from "electron";
+import { BrowserWindow, desktopCapturer, ipcMain } from "electron";
 import { ControlData, DisplayInfo, KeyJson } from "../../../util/type";
 import { x11Simulator } from "./xvfb/x11lib";
 import { keySymToX11Key } from "./xvfb/convertKey";
 
-export const setShareAppIpcHandler = (): void => {
+export const setShareAppIpcHandler = (mainWindow: BrowserWindow): void => {
+  let screenTimer: NodeJS.Timeout | undefined = undefined;
+  ipcMain.handle(
+    "requestScreenFrame",
+    async (event: Electron.IpcMainInvokeEvent, ms: number) => {
+      if (screenTimer) {
+        clearInterval(screenTimer);
+      }
+
+      let frameCount = -1;
+      screenTimer = setInterval(() => {
+        try {
+          if (mainWindow.isDestroyed()) {
+            clearInterval(screenTimer);
+            screenTimer = undefined;
+          } else {
+            frameCount++;
+            if (frameCount % 10 === 0) {
+              mainWindow.webContents.send("sendScreenFrame", true);
+              frameCount = 0;
+            } else {
+              mainWindow.webContents.send("sendScreenFrame", false);
+            }
+          }
+        } catch (error) {
+          console.log(error);
+          clearInterval(screenTimer);
+          screenTimer = undefined;
+        }
+      }, ms);
+    },
+  );
+
   ipcMain.handle(
     "getDisplayInfo",
     async (event: Electron.IpcMainInvokeEvent, isDisplay: boolean) => {
