@@ -1,15 +1,12 @@
-import { IpcRendererEvent, ipcRenderer } from "electron";
+import { ipcRenderer } from "electron";
 import { ControlData, DisplayInfo } from "../util/type";
 
 export const shareApp = {
   requestScreenFrame: async (ms: number): Promise<void> => {
     await ipcRenderer.invoke("requestScreenFrame", ms);
   },
-  sendScreenFrame: (listener: (keyFrame: boolean) => void) => {
-    ipcRenderer.on(
-      "sendScreenFrame",
-      (event: IpcRendererEvent, keyFrame: boolean) => listener(keyFrame),
-    );
+  sendScreenFrame: (listener: () => void) => {
+    ipcRenderer.on("sendScreenFrame", () => listener());
   },
   getDisplayInfo: async (isDisplay: boolean): Promise<DisplayInfo[]> => {
     return await ipcRenderer.invoke("getDisplayInfo", isDisplay);

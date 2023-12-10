@@ -24,7 +24,7 @@ export class ShareVirtualApp {
 
   private displayName: string;
 
-  private preJpegBuffer = Buffer.alloc(0);
+  // private preJpegBuffer = Buffer.alloc(0);
   private screenShot: (displayName: string) => Promise<Buffer | undefined>;
 
   private canvas = document.createElement("canvas");
@@ -34,7 +34,7 @@ export class ShareVirtualApp {
 
   private interval = 30;
 
-  private keyFrame = false;
+  private frameCount = 0;
   private videoEncoder = new VideoEncoder({
     output: (chunk) => {
       const videoBuffer = new Uint8Array(chunk.byteLength);
@@ -100,9 +100,11 @@ export class ShareVirtualApp {
       this.canvas.getContext("2d")?.drawImage(this.image, 0, 0);
 
       const videoFrame = new VideoFrame(this.image, { timestamp: 0 });
+      this.frameCount++;
 
-      if (this.keyFrame) {
+      if (this.frameCount % 10 === 0) {
         this.videoEncoder.encode(videoFrame, { keyFrame: true });
+        this.frameCount = 0;
       } else {
         this.videoEncoder.encode(videoFrame);
       }
@@ -207,7 +209,8 @@ export class ShareVirtualApp {
 
         event.channel.onmessage = () => {
           // displayScreen(this.image, this.preJpegBuffer);
-          this.preJpegBuffer = Buffer.alloc(0);
+          // this.preJpegBuffer = Buffer.alloc(0);
+          // this.frameCount = -1;
         };
       };
 
@@ -329,16 +332,15 @@ export class ShareVirtualApp {
   }
 
   private startScreen(): void {
-    window.shareApp.sendScreenFrame(async (keyFrame: boolean) => {
-      this.keyFrame = keyFrame;
+    window.shareApp.sendScreenFrame(async () => {
       try {
         const img = await this.screenShot(this.displayName);
         if (img) {
-          if (Buffer.compare(img, this.preJpegBuffer) != 0) {
-            displayScreen(this.image, img);
-            this.preJpegBuffer = Buffer.from(img.buffer);
-          }
-          // displayScreen(this.image, img);
+          // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
+          //   displayScreen(this.image, img);
+          //   this.preJpegBuffer = Buffer.from(img.buffer);
+          // }
+          displayScreen(this.image, img);
         }
       } catch (err) {
         console.log(err);
@@ -346,40 +348,23 @@ export class ShareVirtualApp {
     });
     window.shareApp.requestScreenFrame(this.interval);
 
-    // if (this.useInterval) {
-    //   setInterval(async () => {
-    //     try {
-    //       const img = await this.screenShot(this.displayName);
-    //       if (img) {
-    //         // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
-    //         //   displayScreen(this.image, img);
-    //         //   this.preJpegBuffer = Buffer.from(img.buffer);
-    //         // }
-    //         displayScreen(this.image, img);
-    //       }
-    //     } catch (err) {
-    //       console.log(err);
+    // const loop = async () => {
+    //   try {
+    //     const img = await this.screenShot(this.displayName);
+    //     if (img) {
+    //       // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
+    //       //   displayScreen(this.image, img);
+    //       //   this.preJpegBuffer = Buffer.from(img.buffer);
+    //       // }
+    //       displayScreen(this.image, img);
     //     }
-    //   }, this.interval);
-    // } else {
-    //   const loop = async () => {
-    //     try {
-    //       const img = await this.screenShot(this.displayName);
-    //       if (img) {
-    //         // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
-    //         //   displayScreen(this.image, img);
-    //         //   this.preJpegBuffer = Buffer.from(img.buffer);
-    //         // }
-    //         displayScreen(this.image, img);
-    //       }
-    //     } catch (err) {
-    //       console.log(err);
-    //     }
+    //   } catch (err) {
+    //     console.log(err);
+    //   }
 
-    //     await timer(this.interval);
-    //     requestAnimationFrame(loop);
-    //   };
+    //   await timer(this.interval);
     //   requestAnimationFrame(loop);
-    // }
+    // };
+    // requestAnimationFrame(loop);
   }
 }

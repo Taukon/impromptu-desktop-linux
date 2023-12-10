@@ -31,6 +31,7 @@ export class ShareHostApp {
   private isDisplay: boolean;
   private interval = 30;
 
+  private frameCount = 0;
   private videoEncoder = new VideoEncoder({
     output: (chunk) => {
       const videoBuffer = new Uint8Array(chunk.byteLength);
@@ -390,7 +391,7 @@ export class ShareHostApp {
   }
 
   private startChannelScreen(): void {
-    window.shareApp.sendScreenFrame((keyFrame: boolean) => {
+    window.shareApp.sendScreenFrame(() => {
       try {
         if (
           !(
@@ -410,9 +411,11 @@ export class ShareHostApp {
         }
         this.canvas.getContext("2d")?.drawImage(this.video, 0, 0);
         const videoFrame = new VideoFrame(this.video);
+        this.frameCount++;
 
-        if (keyFrame) {
+        if (this.frameCount % 10 === 0) {
           this.videoEncoder.encode(videoFrame, { keyFrame: true });
+          this.frameCount = 0;
         } else {
           this.videoEncoder.encode(videoFrame);
         }
@@ -423,43 +426,5 @@ export class ShareHostApp {
     });
 
     window.shareApp.requestScreenFrame(this.interval);
-
-    // const loop = async () => {
-    //   try {
-    //     if (
-    //       !(
-    //         this.canvas.width === this.video.videoWidth &&
-    //         this.canvas.height === this.video.videoHeight
-    //       )
-    //     ) {
-    //       this.canvas.width = this.video.videoWidth;
-    //       this.canvas.height = this.video.videoHeight;
-
-    //       this.videoEncoder.configure({
-    //         codec: "vp8",
-    //         width: this.video.videoWidth,
-    //         height: this.video.videoHeight,
-    //         framerate: 30,
-    //       });
-    //     }
-    //     this.canvas.getContext("2d")?.drawImage(this.video, 0, 0);
-
-    //     const videoFrame = new VideoFrame(this.video);
-    //     this.frameCount++;
-
-    //     if (this.frameCount % 10 === 0) {
-    //       this.videoEncoder.encode(videoFrame, { keyFrame: true });
-    //       this.frameCount = 0;
-    //     } else {
-    //       this.videoEncoder.encode(videoFrame);
-    //     }
-    //     videoFrame.close();
-    //   } catch (err) {
-    //     console.log(err);
-    //   }
-    //   await timer(this.interval);
-    //   requestAnimationFrame(loop);
-    // };
-    // requestAnimationFrame(loop);
   }
 }

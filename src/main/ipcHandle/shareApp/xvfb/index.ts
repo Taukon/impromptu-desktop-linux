@@ -79,6 +79,15 @@ export const setXvfbIpcHandler = (xvfbForCLI?: Xvfb): void => {
         return true;
       }
 
+      xvfb = new Xvfb(displayNum, {
+        width: x && x > 0 ? x : 1200,
+        height: y && y > 0 ? y : 720,
+        depth: 24,
+      });
+      if (xvfb.start()) {
+        return true;
+      }
+
       return false;
     },
   );

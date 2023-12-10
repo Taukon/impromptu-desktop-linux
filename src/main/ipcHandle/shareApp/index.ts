@@ -12,20 +12,13 @@ export const setShareAppIpcHandler = (mainWindow: BrowserWindow): void => {
         clearInterval(screenTimer);
       }
 
-      let frameCount = -1;
       screenTimer = setInterval(() => {
         try {
           if (mainWindow.isDestroyed()) {
             clearInterval(screenTimer);
             screenTimer = undefined;
           } else {
-            frameCount++;
-            if (frameCount % 10 === 0) {
-              mainWindow.webContents.send("sendScreenFrame", true);
-              frameCount = 0;
-            } else {
-              mainWindow.webContents.send("sendScreenFrame", false);
-            }
+            mainWindow.webContents.send("sendScreenFrame");
           }
         } catch (error) {
           console.log(error);
