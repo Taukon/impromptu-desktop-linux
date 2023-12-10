@@ -303,7 +303,6 @@ const startXvfb = async (
     im,
     width,
     height,
-    false,
   );
 
   if (onControlDisplay && shareVirtualApp) {

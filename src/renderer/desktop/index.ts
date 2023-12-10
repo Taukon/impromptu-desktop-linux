@@ -72,7 +72,6 @@ export const initShareVirtualApp = async (
   im: boolean,
   width: number,
   height: number,
-  useInterval: boolean,
 ): Promise<ShareVirtualApp | undefined> => {
   const isStart = await window.shareApp.startXvfb(displayNum, width, height);
 
@@ -105,7 +104,6 @@ export const initShareVirtualApp = async (
             rtcConfiguration,
             onControlDisplay,
             isFullScreen,
-            useInterval,
             audioStream,
           );
 
@@ -118,7 +116,6 @@ export const initShareVirtualApp = async (
             rtcConfiguration,
             onControlDisplay,
             isFullScreen,
-            useInterval,
           );
 
           return shareVirtualApp;
@@ -132,7 +129,6 @@ export const initShareVirtualApp = async (
         rtcConfiguration,
         onControlDisplay,
         isFullScreen,
-        useInterval,
       );
 
       return shareVirtualApp;

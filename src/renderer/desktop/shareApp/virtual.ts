@@ -3,12 +3,16 @@ import { Buffer } from "buffer";
 import { BrowserList } from "./manage";
 import { listenAppOfferSDP, sendAppAnswerSDP } from "../signaling";
 import { ControlData } from "../../../util/type";
-import { setControl } from "./connect";
 import { createPeerConnection, setRemoteOffer } from "../peerConnection";
 import { controlEventListener, displayScreen } from "../canvas";
 import { AppSDP } from "../signaling/type";
-import { sendAppProtocol } from "../../../protocol/renderer";
-import { timer } from "../../../util";
+import {
+  createEncodedFrame,
+  decodeParseData,
+  parseAppProtocol,
+  sendAppProtocol,
+} from "../../../protocol/renderer";
+import { appStatus } from "../../../protocol/common";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -20,7 +24,7 @@ export class ShareVirtualApp {
 
   private displayName: string;
 
-  private preJpegBuffer = Buffer.alloc(0);
+  // private preJpegBuffer = Buffer.alloc(0);
   private screenShot: (displayName: string) => Promise<Buffer | undefined>;
 
   private canvas = document.createElement("canvas");
@@ -28,8 +32,33 @@ export class ShareVirtualApp {
   private audioStream?: MediaStream;
   public screen: HTMLCanvasElement | HTMLVideoElement;
 
-  private useInterval: boolean;
   private interval = 30;
+
+  private frameCount = 0;
+  private videoEncoder = new VideoEncoder({
+    output: (chunk) => {
+      const videoBuffer = new Uint8Array(chunk.byteLength);
+      chunk.copyTo(videoBuffer);
+      const videoChunk = createEncodedFrame(
+        videoBuffer,
+        chunk.type === "key" ? true : false,
+      );
+
+      Object.values(this.screenChannels).forEach((v) => {
+        if (v.readyState === "open" && v.bufferedAmount == 0) {
+          sendAppProtocol(
+            videoChunk,
+            async (buffer: ArrayBuffer): Promise<void> => {
+              v.send(buffer);
+            },
+          );
+        }
+      });
+    },
+    error: (error) => {
+      console.log(error);
+    },
+  });
 
   public connectionList: BrowserList = {};
   private screenChannels: { [browserId: string]: RTCDataChannel } = {};
@@ -42,7 +71,6 @@ export class ShareVirtualApp {
     rtcConfiguration: RTCConfiguration,
     onControlDisplay: boolean,
     isFullScreen: boolean,
-    useInterval: boolean,
     audioStream?: MediaStream,
   ) {
     this.displayName = `:${displayNum}`;
@@ -51,13 +79,36 @@ export class ShareVirtualApp {
     this.desktopId = desktopId;
     this.socket = socket;
 
-    this.useInterval = useInterval;
-
     this.canvas.setAttribute("tabindex", String(0));
     this.image.onload = () => {
-      this.canvas.width = this.image.width;
-      this.canvas.height = this.image.height;
+      if (
+        !(
+          this.canvas.width === this.image.width &&
+          this.canvas.height === this.image.height
+        )
+      ) {
+        this.canvas.width = this.image.width;
+        this.canvas.height = this.image.height;
+
+        this.videoEncoder.configure({
+          codec: "vp8",
+          width: this.image.width,
+          height: this.image.height,
+          framerate: 30,
+        });
+      }
       this.canvas.getContext("2d")?.drawImage(this.image, 0, 0);
+
+      const videoFrame = new VideoFrame(this.image, { timestamp: 0 });
+      this.frameCount++;
+
+      if (this.frameCount % 10 === 0) {
+        this.videoEncoder.encode(videoFrame, { keyFrame: true });
+        this.frameCount = 0;
+      } else {
+        this.videoEncoder.encode(videoFrame);
+      }
+      videoFrame.close();
     };
 
     this.screenShot = isFullScreen
@@ -157,7 +208,9 @@ export class ShareVirtualApp {
         };
 
         event.channel.onmessage = () => {
-          this.sendScreenImg(event.channel);
+          // displayScreen(this.image, this.preJpegBuffer);
+          // this.preJpegBuffer = Buffer.alloc(0);
+          // this.frameCount = -1;
         };
       };
 
@@ -243,7 +296,19 @@ export class ShareVirtualApp {
 
         const control = (data: ControlData) =>
           window.shareApp.control(this.displayName, data);
-        setControl(event.channel, control);
+        // setControl(event.channel, control);
+
+        event.channel.onmessage = async (message) => {
+          const parse = parseAppProtocol(
+            new Uint8Array(message.data as ArrayBuffer),
+          );
+
+          if (parse.status === appStatus.control) {
+            const data: ControlData = decodeParseData(parse.data);
+            await control(data);
+            // window.shareApp.controlWID(displayName, this.windowId, data);
+          }
+        };
       };
 
       controlConnection.onconnectionstatechange = () => {
@@ -267,58 +332,39 @@ export class ShareVirtualApp {
   }
 
   private startScreen(): void {
-    if (this.useInterval) {
-      setInterval(async () => {
-        try {
-          const img = await this.screenShot(this.displayName);
-          if (img) {
-            if (Buffer.compare(img, this.preJpegBuffer) != 0) {
-              displayScreen(this.image, img);
-              this.preJpegBuffer = Buffer.from(img.buffer);
-              Object.values(this.screenChannels).forEach((v) => {
-                if (v.readyState === "open" && v.bufferedAmount == 0) {
-                  this.sendScreenImg(v);
-                }
-              });
-            }
-          }
-        } catch (err) {
-          console.log(err);
+    window.shareApp.sendScreenFrame(async () => {
+      try {
+        const img = await this.screenShot(this.displayName);
+        if (img) {
+          // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
+          //   displayScreen(this.image, img);
+          //   this.preJpegBuffer = Buffer.from(img.buffer);
+          // }
+          displayScreen(this.image, img);
         }
-      }, this.interval);
-    } else {
-      const loop = async () => {
-        try {
-          const img = await this.screenShot(this.displayName);
-          if (img) {
-            if (Buffer.compare(img, this.preJpegBuffer) != 0) {
-              displayScreen(this.image, img);
-              this.preJpegBuffer = Buffer.from(img.buffer);
-              Object.values(this.screenChannels).forEach((v) => {
-                if (v.readyState === "open" && v.bufferedAmount == 0) {
-                  this.sendScreenImg(v);
-                }
-              });
-            }
-          }
-        } catch (err) {
-          console.log(err);
-        }
-
-        await timer(this.interval);
-        requestAnimationFrame(loop);
-      };
-      requestAnimationFrame(loop);
-    }
-  }
-
-  private async sendScreenImg(channel: RTCDataChannel): Promise<void> {
-    const sendImg = async (buffer: ArrayBuffer): Promise<void> => {
-      if (channel.readyState === "open") {
-        channel.send(buffer);
+      } catch (err) {
+        console.log(err);
       }
-    };
+    });
+    window.shareApp.requestScreenFrame(this.interval);
 
-    await sendAppProtocol(this.preJpegBuffer, sendImg);
+    // const loop = async () => {
+    //   try {
+    //     const img = await this.screenShot(this.displayName);
+    //     if (img) {
+    //       // if (Buffer.compare(img, this.preJpegBuffer) != 0) {
+    //       //   displayScreen(this.image, img);
+    //       //   this.preJpegBuffer = Buffer.from(img.buffer);
+    //       // }
+    //       displayScreen(this.image, img);
+    //     }
+    //   } catch (err) {
+    //     console.log(err);
+    //   }
+
+    //   await timer(this.interval);
+    //   requestAnimationFrame(loop);
+    // };
+    // requestAnimationFrame(loop);
   }
 }
