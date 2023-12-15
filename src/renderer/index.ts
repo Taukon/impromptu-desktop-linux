@@ -142,6 +142,8 @@ const signalingConnect = () => {
         }
       },
     );
+
+    socket.emit("role", "desktop");
   };
 };
 
@@ -582,6 +584,8 @@ const startCLI = async (check: CLICheck) => {
       }
     },
   );
+
+  socket.emit("role", "desktop");
 };
 
 const start = async () => {
