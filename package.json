@@ -21,6 +21,7 @@
   "gypfile": true,
   "devDependencies": {
     "@types/bindings": "^1.5.1",
+    "@types/crypto-js": "^4.2.1",
     "@types/mini-css-extract-plugin": "^2.5.1",
     "@types/node": "^20.4.1",
     "@types/react": "^18.2.14",
@@ -48,6 +49,7 @@
     "buffer": "^6.0.3",
     "chokidar": "^3.5.3",
     "copyfiles": "^2.4.1",
+    "crypto-js": "^4.2.0",
     "node": "^20.4.0",
     "node-addon-api": "^7.0.0",
     "node-gyp": "^9.4.0",

@@ -1,4 +1,5 @@
 import { Socket } from "socket.io-client";
+import crypto from "crypto-js";
 import { AppSDP, AuthInfo, FileSDP, ReqAuthProxyInfo } from "./type";
 
 export const reqAutoProxy = (
@@ -9,10 +10,10 @@ export const reqAutoProxy = (
   desktopPassword: string,
 ) => {
   const proxyInfo: ReqAuthProxyInfo = {
-    proxyId,
-    proxyPassword,
-    desktopId,
-    desktopPassword,
+    proxyId: proxyId,
+    proxyPassword: crypto.SHA256(proxyPassword).toString(),
+    desktopId: desktopId,
+    desktopPassword: desktopPassword,
   };
   socket.emit("reqAutoProxy", proxyInfo);
 };
@@ -23,7 +24,8 @@ export const listenAuth = (
   password: string,
 ) => {
   socket.on("reqAuth", (info: AuthInfo) => {
-    if (desktopId === info.desktopId && password === info.password) {
+    const hashedPassword = crypto.SHA256(password).toString();
+    if (desktopId === info.desktopId && hashedPassword === info.password) {
       socket.emit("resAuth", { browserId: info.browserId, status: true });
     } else {
       socket.emit("resAuth", { browserId: info.browserId, status: false });
