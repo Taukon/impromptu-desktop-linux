@@ -1,4 +1,5 @@
 import { Socket } from "socket.io-client";
+import crypto from "crypto-js";
 import { AppSDP, AuthInfo, FileSDP, ReqAuthProxyInfo } from "./type";
 
 export const reqAutoProxy = (
@@ -9,10 +10,10 @@ export const reqAutoProxy = (
   desktopPassword: string,
 ) => {
   const proxyInfo: ReqAuthProxyInfo = {
-    proxyId,
-    proxyPassword,
-    desktopId,
-    desktopPassword,
+    proxyId: proxyId,
+    proxyPassword: crypto.SHA256(proxyPassword).toString(),
+    desktopId: desktopId,
+    desktopPassword: desktopPassword,
   };
   socket.emit("reqAutoProxy", proxyInfo);
 };
@@ -23,7 +24,8 @@ export const listenAuth = (
   password: string,
 ) => {
   socket.on("reqAuth", (info: AuthInfo) => {
-    if (desktopId === info.desktopId && password === info.password) {
+    const hashedPassword = crypto.SHA256(password).toString();
+    if (desktopId === info.desktopId && hashedPassword === info.password) {
       socket.emit("resAuth", { browserId: info.browserId, status: true });
     } else {
       socket.emit("resAuth", { browserId: info.browserId, status: false });
@@ -32,27 +34,6 @@ export const listenAuth = (
 };
 
 // ---------------- App
-
-// B <-offer- D
-export const sendAppOfferSDP = (
-  socket: Socket,
-  browserId: string,
-  appSdp: AppSDP,
-) => {
-  socket.emit(`shareApp-offerSDP`, browserId, appSdp);
-};
-
-// B -answer-> D
-export const listenAppAnswerSDP = (
-  socket: Socket,
-  listener: (browserId: string, appSdp: AppSDP) => Promise<void>,
-) => {
-  socket.on("shareApp-answerSDP", async (browserId: string, appSdp: AppSDP) => {
-    await listener(browserId, appSdp);
-  });
-};
-
-// ----------------
 
 // B -offer-> D
 export const listenAppOfferSDP = (
@@ -74,30 +55,6 @@ export const sendAppAnswerSDP = (
 };
 
 // ---------------- File
-
-// B <-offer- D
-export const sendFileOfferSDP = (
-  socket: Socket,
-  browserId: string,
-  fileSdp: FileSDP,
-) => {
-  socket.emit(`shareFile-offerSDP`, browserId, fileSdp);
-};
-
-// B -answer-> D
-export const listenFileAnswerSDP = (
-  socket: Socket,
-  listener: (browserId: string, fileSdp: FileSDP) => Promise<void>,
-) => {
-  socket.on(
-    "shareFile-answerSDP",
-    async (browserId: string, fileSdp: FileSDP) => {
-      await listener(browserId, fileSdp);
-    },
-  );
-};
-
-// ----------------
 
 // B -offer-> D
 export const listenFileOfferSDP = (
