@@ -26,6 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
+          sudo apt install -y libx11-dev libxtst-dev libjpeg-dev
           pip install setuptools
           npm install -D
 
