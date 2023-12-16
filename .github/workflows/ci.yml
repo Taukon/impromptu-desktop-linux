@@ -24,6 +24,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
 
+      - name: Install apt packages
+        run: sudo apt install -y libx11-dev libxtst-dev libjpeg-dev
+
       - name: Run lint
         run: |
           npm install
