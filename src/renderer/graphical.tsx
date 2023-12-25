@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { FileShare } from './components/FileShare';
-import { HostScreen } from './components/HostScreen';
-import { VirtualScreen } from './components/VirtualScreen';
+import { FileShare } from './components/fileShare';
+import { HostScreen } from './components/hostScreen';
+import { VirtualScreen } from './components/virtualScreen';
 import { impromptu } from '.';
 
 const RootDiv = () => {
