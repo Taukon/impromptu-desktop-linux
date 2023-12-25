@@ -24,8 +24,8 @@
     "@types/crypto-js": "^4.2.1",
     "@types/mini-css-extract-plugin": "^2.5.1",
     "@types/node": "^20.4.1",
-    "@types/react": "^18.2.14",
-    "@types/react-dom": "^18.2.6",
+    "@types/react": "^18.2.45",
+    "@types/react-dom": "^18.2.18",
     "@typescript-eslint/eslint-plugin": "^6.4.0",
     "@typescript-eslint/parser": "^6.4.0",
     "copy-webpack-plugin": "^11.0.0",
@@ -34,10 +34,13 @@
     "electron-builder": "^24.6.4",
     "eslint": "^8.47.0",
     "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-react": "^7.33.2",
     "html-webpack-plugin": "^5.5.3",
     "mini-css-extract-plugin": "^2.7.6",
     "node-loader": "^2.0.0",
     "prettier": "^3.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "terser-webpack-plugin": "^5.3.9",
     "ts-loader": "^9.4.4",
     "typescript": "^5.1.6",
@@ -53,8 +56,6 @@
     "node": "^20.4.0",
     "node-addon-api": "^7.0.0",
     "node-gyp": "^9.4.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "socket.io-client": "^4.7.1"
   }
 }
