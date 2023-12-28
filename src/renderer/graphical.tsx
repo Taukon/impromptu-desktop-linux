@@ -58,7 +58,7 @@ const DesktopOption = () => {
 
     return (
         <>
-            <p>Desktop ID: {impromptu.desktopId}</p>
+            <p>Desktop ID: {impromptu.desktopId} <button onClick={() => {if(impromptu.desktopId){navigator.clipboard.writeText(impromptu.desktopId)}}}>copy</button></p>
             <FileShare />
             <p>
                 <button disabled={lock} onClick={() => setIsHost(!isHost)}>Screen Mode</button>
