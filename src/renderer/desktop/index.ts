@@ -3,7 +3,7 @@ import { listenAuth, reqAutoProxy } from "./signaling";
 import { ShareHostApp } from "./shareApp/host";
 import { ShareVirtualApp } from "./shareApp/virtual";
 import { ShareFile } from "./shareFile";
-import { signalingAddress } from "../config";
+import { signalingAddress, socketOption } from "../config";
 
 const setAuth = (desktopId: string, socket: Socket, password: string): void => {
   listenAuth(socket, desktopId, password);
@@ -153,11 +153,7 @@ export class Impromptu {
   private shareFile?: ShareFile;
 
   constructor() {
-    this.socket = io(signalingAddress, {
-      secure: true,
-      rejectUnauthorized: false,
-      autoConnect: false,
-    });
+    this.socket = io(signalingAddress, socketOption);
   }
 
   public listenDesktopId(
