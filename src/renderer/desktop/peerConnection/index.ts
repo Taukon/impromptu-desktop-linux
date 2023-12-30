@@ -4,9 +4,19 @@ export const createPeerConnection = (
 ): RTCPeerConnection => {
   const peerConnection = new RTCPeerConnection(peerConnectionConfig);
 
+  let complete = false;
+  const timeoutId = setTimeout(() => {
+    if (peerConnection.localDescription?.sdp && !complete) {
+      sendSDP(peerConnection.localDescription.sdp);
+      complete = true;
+      console.log(`can't gather all Icecandidate`);
+    }
+  }, 5 * 1000);
+
   peerConnection.onicecandidate = (event) => {
     if (!event.candidate) {
-      if (peerConnection.localDescription?.sdp) {
+      if (peerConnection.localDescription?.sdp && !complete) {
+        clearTimeout(timeoutId);
         sendSDP(peerConnection.localDescription.sdp);
       }
     }
