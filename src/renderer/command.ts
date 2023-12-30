@@ -38,6 +38,7 @@ export const startCLI = async (check: CLICheck) => {
       check.proxyId && check.proxyPassword
         ? { id: check.proxyId, pwd: check.proxyPassword }
         : undefined;
-    impromptu.listenDesktopId(initDesktop, check.password, proxy);
+    const hostOnly = check.hostOnly ?? false;
+    impromptu.listenDesktopId(initDesktop, check.password, hostOnly, proxy);
   }
 };
