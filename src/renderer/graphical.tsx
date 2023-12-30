@@ -9,6 +9,7 @@ const RootDiv = () => {
     const proxyIdRef = useRef<HTMLInputElement>(null);
     const proxyPwdRef = useRef<HTMLInputElement>(null);
     const pwdRef = useRef<HTMLInputElement>(null);
+    const [hostOnly, setHostOnly] = useState<boolean>(false);
     const [signalingInfo, setSignalingInfo] = useState<{pwd: string, proxy?: {id: string, pwd: string}}>();
     const [isConnected, setIsConnected] = useState<boolean>(false);
 
@@ -18,8 +19,13 @@ const RootDiv = () => {
             if (!once.current) return;
             once.current = false;
 
-            console.log(signalingInfo);
-            impromptu.listenDesktopId(() => {setIsConnected(true)}, signalingInfo.pwd, signalingInfo.proxy)
+            // console.log(signalingInfo);
+            impromptu.listenDesktopId(
+                () => {setIsConnected(true)}, 
+                signalingInfo.pwd, 
+                hostOnly,
+                signalingInfo.proxy
+            );
         }
     }, [signalingInfo]);
 
@@ -28,6 +34,7 @@ const RootDiv = () => {
             <div id="signalingInfo">
                 <p>ProxyID: <input ref={proxyIdRef} /></p>
                 <p>Proxy Password: <input ref={proxyPwdRef} /></p>
+                <p>use Only LAN: <input type="checkbox" checked={hostOnly} onChange={() => setHostOnly(!hostOnly)} /></p>
                 <p>Password: <input ref={pwdRef} defaultValue={"impromptu"} /></p>
                 <button ref={ c => {
                     if(c){

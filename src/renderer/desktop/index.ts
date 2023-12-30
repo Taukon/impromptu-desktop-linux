@@ -159,6 +159,7 @@ export class Impromptu {
   public listenDesktopId(
     callBack: () => void,
     password: string,
+    hostOnly: boolean,
     proxy?: { id: string; pwd: string },
   ) {
     this.socket.connect();
@@ -167,7 +168,7 @@ export class Impromptu {
       async (desktopId?: string, rtcConfiguration?: RTCConfiguration) => {
         if (typeof desktopId === "string" && rtcConfiguration) {
           setAuth(desktopId, this.socket, password);
-          this.rtcConfiguration = rtcConfiguration;
+          this.rtcConfiguration = hostOnly ? {} : rtcConfiguration;
           this.desktopId = desktopId;
 
           if (proxy) {
