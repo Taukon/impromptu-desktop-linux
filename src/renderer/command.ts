@@ -12,6 +12,7 @@ export const startCLI = async (check: CLICheck) => {
         check.host.audio,
         false,
         true,
+        true,
       );
     } else if (check.virtual) {
       impromptu
