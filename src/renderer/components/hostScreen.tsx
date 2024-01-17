@@ -6,6 +6,7 @@ export const HostScreen: React.FC<{setLock: React.Dispatch<React.SetStateAction<
     const [source, setSource] = useState<{id: string, isDisplay: boolean}>();
     const [audio, setAudio] = useState<boolean>(false);
     const [control, setControl] = useState<boolean>(false);
+    const [webCodecs, setWebCodecs] = useState<boolean>(true);
 
     const [screenInfo, setScreenInfo] = useState<DisplayInfo[]>([]);
     window.shareApp.getDisplayInfo(true).then(v => setScreenInfo(v));
@@ -19,6 +20,7 @@ export const HostScreen: React.FC<{setLock: React.Dispatch<React.SetStateAction<
         <>
             <p>Host Display</p>
             <p>audio enable: <input type="checkbox" checked={audio} onChange={() => setAudio(!audio)} /></p>
+            <p>webCodecs enable: <input type="checkbox" checked={webCodecs} onChange={() => setWebCodecs(!webCodecs)} /></p>
             <p>control from this window: <input type="checkbox" checked={control} onChange={() => setControl(!control)} /></p>
             <p>
                 {!source && screenInfo.map((v, i) => {
@@ -32,7 +34,7 @@ export const HostScreen: React.FC<{setLock: React.Dispatch<React.SetStateAction<
                                     c.onclick = async () => {
                                         if(parent && !source){
                                             c.disabled = true;
-                                            const result = await impromptu.startHostDisplay(true, v.id, audio, control, true, parent);
+                                            const result = await impromptu.startHostDisplay(true, v.id, audio, control, webCodecs, true, parent);
                                             if(!result){
                                                 c.disabled = false;
                                                 return;
@@ -60,7 +62,7 @@ export const HostScreen: React.FC<{setLock: React.Dispatch<React.SetStateAction<
                                     c.onclick = async () => {
                                         if(parent && !source){
                                             c.disabled = true;
-                                            const result = await impromptu.startHostDisplay(true, v.id, audio, control, false, parent);
+                                            const result = await impromptu.startHostDisplay(true, v.id, audio, control, webCodecs, false, parent);
                                             if(!result){
                                                 c.disabled = false;
                                                 return;

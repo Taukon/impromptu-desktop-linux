@@ -27,7 +27,7 @@ export class ShareHostApp {
   private video = document.createElement("video");
   public screen: HTMLCanvasElement | HTMLVideoElement;
   private screenStream: MediaStream;
-  private useScreenChannel: boolean;
+  private webCodecs: boolean;
   private isDisplay: boolean;
   private interval = 30;
 
@@ -68,7 +68,7 @@ export class ShareHostApp {
     socket: Socket,
     rtcConfiguration: RTCConfiguration,
     videoStream: MediaStream,
-    useScreenChannel: boolean,
+    webCodecs: boolean,
     onControlDisplay: boolean,
   ) {
     this.desktopId = desktopId;
@@ -79,7 +79,7 @@ export class ShareHostApp {
     this.video.srcObject = videoStream;
     this.video.onloadedmetadata = () => this.video.play();
     this.screenStream = videoStream;
-    this.useScreenChannel = useScreenChannel;
+    this.webCodecs = webCodecs;
     this.windowId = windowId;
     this.isDisplay = isDisplay;
 
@@ -93,9 +93,9 @@ export class ShareHostApp {
     } else {
       this.screen = this.video;
     }
-    if (useScreenChannel) {
+    if (webCodecs) {
       this.startChannelScreen();
-    } else if (!useScreenChannel && onControlDisplay) {
+    } else if (!webCodecs && onControlDisplay) {
       this.startTrackScreen();
     }
 
@@ -213,7 +213,7 @@ export class ShareHostApp {
         // };
 
         event.channel.onopen = () => {
-          if (this.useScreenChannel) {
+          if (this.webCodecs) {
             this.screenChannels[browserId] = event.channel;
           } else {
             event.channel.close();
@@ -222,7 +222,7 @@ export class ShareHostApp {
 
         event.channel.onclose = () => {
           event.channel.close();
-          if (this.useScreenChannel) {
+          if (this.webCodecs) {
             this.closeConnection(browserId);
             delete this.screenChannels[browserId];
           }
@@ -230,14 +230,14 @@ export class ShareHostApp {
 
         event.channel.onerror = () => {
           event.channel.close();
-          if (this.useScreenChannel) {
+          if (this.webCodecs) {
             this.closeConnection(browserId);
             delete this.screenChannels[browserId];
           }
         };
 
         event.channel.onmessage = () => {
-          if (!this.useScreenChannel) {
+          if (!this.webCodecs) {
             event.channel.close();
           }
         };
@@ -250,7 +250,7 @@ export class ShareHostApp {
           case "disconnected":
           case "failed":
           case "closed":
-            if (this.useScreenChannel) this.closeConnection(browserId);
+            if (this.webCodecs) this.closeConnection(browserId);
             break;
         }
       };
@@ -278,7 +278,7 @@ export class ShareHostApp {
       );
 
       const videoTracks = this.screenStream.getVideoTracks();
-      if (videoTracks.length > 0 && !this.useScreenChannel) {
+      if (videoTracks.length > 0 && !this.webCodecs) {
         screenConnection.addTrack(videoTracks[0], this.screenStream);
       }
 
@@ -290,7 +290,7 @@ export class ShareHostApp {
       screenConnection.onconnectionstatechange = () => {
         switch (screenConnection.connectionState) {
           case "connected":
-            if (!this.useScreenChannel && videoTracks.length == 0) {
+            if (!this.webCodecs && videoTracks.length == 0) {
               this.closeConnection(browserId);
             }
             break;
