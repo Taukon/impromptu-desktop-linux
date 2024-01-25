@@ -12,7 +12,7 @@ import {
   parseAppProtocol,
   sendAppProtocol,
 } from "../../../protocol/renderer";
-import { appStatus } from "../../../protocol/common";
+import { appStatus, getRandomInt } from "../../../protocol/common";
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -35,13 +35,15 @@ export class ShareVirtualApp {
   private interval = 30;
 
   private frameCount = 0;
+  private keyFrameId = -1;
   private videoEncoder = new VideoEncoder({
     output: (chunk) => {
       const videoBuffer = new Uint8Array(chunk.byteLength);
       chunk.copyTo(videoBuffer);
       const videoChunk = createEncodedFrame(
         videoBuffer,
-        chunk.type === "key" ? true : false,
+        this.keyFrameId,
+        chunk.type === "key" ? 0 : this.frameCount,
       );
 
       Object.values(this.screenChannels).forEach((v) => {
@@ -103,6 +105,7 @@ export class ShareVirtualApp {
       this.frameCount++;
 
       if (this.frameCount % 10 === 0) {
+        this.keyFrameId = getRandomInt(0xff);
         this.videoEncoder.encode(videoFrame, { keyFrame: true });
         this.frameCount = 0;
       } else {

@@ -137,30 +137,51 @@ export const appendBuffer = (buffer1: Uint8Array, buffer2: Uint8Array) => {
   return tmp;
 };
 
+// Screen Frame Protocol
+//   header: 2B
+// ---------------
+// | 1B: keyFrameId
+// ---------------
+// | 1B: order
+// ---------------
+
 export const parseEncodedFrame = (
   videoChunk: Uint8Array,
-): { keyFrame: boolean; data: Uint8Array } => {
-  const videoHeader = 1;
+): { keyFrameId: number; order: number; data: Uint8Array } => {
+  const videoHeader = 2;
   const chunkHeader = new DataView(videoChunk.slice(0, videoHeader).buffer);
 
-  const keyFrame = chunkHeader.getUint8(0);
+  // keyFrameId: 1B
+  const keyFrameId = chunkHeader.getUint8(0);
+
+  // order: 1B
+  const order = chunkHeader.getUint8(1);
+
   const data = videoChunk.slice(videoHeader);
 
   return {
-    keyFrame: keyFrame === 0x1 ? true : false,
+    keyFrameId: keyFrameId,
+    order: order,
     data: data,
   };
 };
 
 export const createEncodedFrame = (
   videoBuffer: Uint8Array,
-  keyFrame: boolean,
+  keyFrameId: number,
+  order: number,
 ): Uint8Array => {
-  const videoHeader = 1;
+  const videoHeader = 2;
   const chunkHeader = new Uint8Array(videoHeader);
   const dataChunkHeader = new DataView(chunkHeader.buffer);
 
-  dataChunkHeader.setUint8(0, keyFrame ? 0x1 : 0x0);
+  // keyFrameId: 1B
+  if (keyFrameId > 0xff || order < 0) return new Uint8Array(0);
+  dataChunkHeader.setUint8(0, keyFrameId);
+
+  // order: 1B
+  if (order > 0xff || order < 0) return new Uint8Array(0);
+  dataChunkHeader.setUint8(1, order);
 
   const videoChunk = appendBuffer(chunkHeader, videoBuffer);
   return videoChunk;
