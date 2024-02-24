@@ -4,7 +4,7 @@ module.exports = {
         node: true,
         browser: true
     },
-    ignorePatterns: ["webpack.config.js", ".eslintrc.js", "build.js"],
+    ignorePatterns: ["webpack.config.js", ".eslintrc.js", "build.js", "postcss.config.js", "tailwind.config.js"],
     extends: [
         'plugin:react/recommended',
         "eslint:recommended",

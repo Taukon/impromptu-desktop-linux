@@ -43,6 +43,7 @@ const addFiles = (fileList: FileWatchList, msgItems: string[]) => {
   for (const item of msgItems) {
     const button = document.createElement("button");
     button.textContent = button.id = button.name = item;
+    button.className = "join-item btn";
 
     fileList.appendChild(button);
   }
@@ -52,6 +53,7 @@ const writingFiles = (fileList: FileWatchList, msgItems: string[]) => {
   for (const item of msgItems) {
     const button = document.createElement("button");
     button.textContent = button.id = button.name = item;
+    button.className = "join-item btn";
     button.disabled = true;
 
     fileList.appendChild(button);
