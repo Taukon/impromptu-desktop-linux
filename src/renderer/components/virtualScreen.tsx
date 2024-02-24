@@ -13,16 +13,16 @@ export const VirtualScreen: React.FC<{setLock: React.Dispatch<React.SetStateActi
     const screenRef = useRef<HTMLDivElement>(null);
 
     return (
-        <>
+        <div className="menu text-base font-medium w-full">
             <p>Virtual Display</p>
-            <p>audio enable: <input type="checkbox" checked={audio} onChange={() => setAudio(!audio)} /></p>
-            <p>Input Method enable: <input type="checkbox" checked={im} onChange={() => setIM(!im)} /></p>
-            <p>Full Screen enable: <input type="checkbox" checked={fullScreen} onChange={() => setFullScreen(!fullScreen)} /></p>
-            <p>keyboard layout: <input ref={layoutRef} defaultValue={"jp"} /></p>
-            <p>width: <input ref={widthRef} type="number" min={1} defaultValue={1200} /></p>
-            <p>height: <input ref={heightRef} type="number" min={1} defaultValue={720} /></p>
+            <p>audio enable: <input type="checkbox" className="checkbox checkbox-xs checkbox-primary" checked={audio} onChange={() => setAudio(!audio)} /></p>
+            <p>Input Method enable: <input type="checkbox" className="checkbox checkbox-xs checkbox-primary" checked={im} onChange={() => setIM(!im)} /></p>
+            <p>Full Screen enable: <input type="checkbox" className="checkbox checkbox-xs checkbox-primary" checked={fullScreen} onChange={() => setFullScreen(!fullScreen)} /></p>
+            <p>keyboard layout: <input className="input input-sm input-bordered input-primary w-24 max-w-xs text-base" ref={layoutRef} defaultValue={"jp"} /></p>
+            <p>width: <input className="input input-sm input-bordered input-primary w-24 max-w-sm text-base" ref={widthRef} type="number" min={1} defaultValue={1200} /></p>
+            <p>height: <input className="input input-sm input-bordered input-primary w-24 max-w-sm text-base" ref={heightRef} type="number" min={1} defaultValue={720} /></p>
             <p>
-                <button ref={
+                <button className="btn btn-sm btn-outline text-base btn-accent" ref={
                     c => {
                         if(c){
                             c.onclick = async () => {
@@ -59,7 +59,7 @@ export const VirtualScreen: React.FC<{setLock: React.Dispatch<React.SetStateActi
                 }>Xvfb run</button>
             </p>
             <p>
-                <button ref={
+                <button className="btn btn-sm btn-outline text-base btn-warning" ref={
                     c => {
                         if(c){
                             c.onclick = () => {
@@ -70,8 +70,8 @@ export const VirtualScreen: React.FC<{setLock: React.Dispatch<React.SetStateActi
                 }>Kill Xvfb</button>
             </p>
             <p>
-                <input  ref={appRef} defaultValue={"xterm"} />
-                <button ref={
+                <input className="input input-sm input-bordered input-primary w-full max-w-md text-xl"  ref={appRef} defaultValue={"xterm"} />
+                <button className="btn btn-sm btn-outline text-base btn-primary" ref={
                     c => {
                         if(c){
                             c.onclick = async () => {
@@ -85,6 +85,6 @@ export const VirtualScreen: React.FC<{setLock: React.Dispatch<React.SetStateActi
                 }>app run</button>
             </p>
             <div ref={screenRef}></div>
-        </>
+        </div>
     )
 };

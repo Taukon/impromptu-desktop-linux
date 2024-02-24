@@ -3,7 +3,6 @@ const CopyPlugin = require('copy-webpack-plugin');
 const { DefinePlugin, IgnorePlugin } = require('webpack');
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 
 const optionalPlugins = [];
@@ -134,11 +133,9 @@ const renderer = {
       {
         test: /\.css$/,
         use: [
-          MiniCssExtractPlugin.loader,
-          {
-            loader: 'css-loader',
-            options: { sourceMap: isDev },
-          },
+          'style-loader',
+          { loader: 'css-loader', options: { importLoaders: 1 } },
+          'postcss-loader',
         ],
       },
       {
@@ -154,13 +151,12 @@ const renderer = {
       'process.env.VERSION_ENV': `"${require('./package.json').version}"`,
     }),
     new HtmlWebpackPlugin({
-      template: './src/index.html',
+      template: './src/renderer/index.html',
       minify: !isDev,
       inject: 'body',
       filename: 'index.html',
       scriptLoading: 'blocking',
     }),
-    new MiniCssExtractPlugin(),
   ],
   optimization: {
     minimizer: [new TerserPlugin({

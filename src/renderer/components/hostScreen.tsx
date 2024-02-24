@@ -17,15 +17,16 @@ export const HostScreen: React.FC<{setLock: React.Dispatch<React.SetStateAction<
     const screenRef = useRef<HTMLDivElement>(null);
 
     return (
-        <>
+        <div className="menu text-base font-medium w-full">
             <p>Host Display</p>
-            <p>audio enable: <input type="checkbox" checked={audio} onChange={() => setAudio(!audio)} /></p>
-            <p>webCodecs enable: <input type="checkbox" checked={webCodecs} onChange={() => setWebCodecs(!webCodecs)} /></p>
-            <p>control from this window: <input type="checkbox" checked={control} onChange={() => setControl(!control)} /></p>
+            <p>audio enable: <input type="checkbox" className="checkbox checkbox-xs checkbox-primary" checked={audio} onChange={() => setAudio(!audio)} /></p>
+            <p>webCodecs enable: <input type="checkbox" className="checkbox checkbox-xs checkbox-primary" checked={webCodecs} onChange={() => setWebCodecs(!webCodecs)} /></p>
+            <p>control from this window: <input type="checkbox" className="checkbox checkbox-xs checkbox-primary" checked={control} onChange={() => setControl(!control)} /></p>
             <p>
                 {!source && screenInfo.map((v, i) => {
                     return (
                         <button 
+                        className="btn btn-sm btn-outline text-base btn-secondary"
                         key={i} 
                         ref={
                             c => {
@@ -54,6 +55,7 @@ export const HostScreen: React.FC<{setLock: React.Dispatch<React.SetStateAction<
                 {!source && windowInfo.map((v, i) => {
                     return (
                         <button 
+                        className="btn btn-sm btn-outline text-base btn-accent"
                         key={i} 
                         ref={
                             c => {
@@ -81,6 +83,6 @@ export const HostScreen: React.FC<{setLock: React.Dispatch<React.SetStateAction<
                 }
             </p>
             <div ref={screenRef}></div>
-        </>
+        </div>
     )
 };

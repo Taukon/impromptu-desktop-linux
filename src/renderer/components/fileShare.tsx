@@ -20,14 +20,15 @@ export const FileShare: React.FC = () => {
         <>
             <div>
                 <div>
-                    <input ref={dirPathRef} />
-                    <button ref={
+                    <input className="input input-sm input-bordered input-primary w-full max-w-md text-base" ref={dirPathRef} />
+                    <button className="btn btn-sm btn-outline text-base btn-primary" ref={
                         c => {
                             if(c){
                                 c.onclick = async () => {
                                     const dirPath = dirPathRef.current;
                                     const fileList = fileListRef.current;
                                     if(fileList && dirPath && dirPath.value != ""){
+                                        fileList.className = "join-vertical";
                                         const result = await impromptu.startFileShare(dirPath.value, fileList);
                                         if(result){
                                             c.disabled = true;

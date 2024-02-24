@@ -4,6 +4,7 @@ import { FileShare } from './components/fileShare';
 import { HostScreen } from './components/hostScreen';
 import { VirtualScreen } from './components/virtualScreen';
 import { impromptu } from '.';
+import "./index.css";
 
 const RootDiv = () => {
     const proxyIdRef = useRef<HTMLInputElement>(null);
@@ -31,27 +32,27 @@ const RootDiv = () => {
 
     return (
         <>
-            <div id="signalingInfo">
-                <p>ProxyID: <input ref={proxyIdRef} /></p>
-                <p>Proxy Password: <input ref={proxyPwdRef} /></p>
-                <p>use Only LAN: <input type="checkbox" checked={hostOnly} onChange={() => setHostOnly(!hostOnly)} /></p>
-                <p>Password: <input ref={pwdRef} defaultValue={"impromptu"} /></p>
-                <button ref={ c => {
-                    if(c){
-                        c.onclick = () => {
-                            if(pwdRef.current?.value){
-                                c.disabled = true;
-                                setSignalingInfo({
-                                    pwd: pwdRef.current.value,
-                                    proxy: proxyIdRef.current?.value && proxyPwdRef.current?.value ?
-                                        {id: proxyIdRef.current.value, pwd: proxyPwdRef.current.value} :
-                                        undefined
-                                });
-                            }
+            <div className="menu text-xl font-medium w-full" id="signalingInfo">
+                <p>ProxyID: <input className="input input-bordered input-success input-sm w-full max-w-xs text-xl" ref={proxyIdRef} /></p>
+                <p>Proxy Password: <input className="input input-bordered input-success input-sm w-full max-w-xs text-xl" ref={proxyPwdRef} /></p>
+                <p>Password: <input className="input input-bordered input-success input-sm w-full max-w-xs text-xl" ref={pwdRef} defaultValue={"impromptu"} /></p>
+                <p>use Only LAN: <input type="checkbox" className="checkbox checkbox-primary" checked={hostOnly} onChange={() => setHostOnly(!hostOnly)} /></p>
+            </div>
+            <button className="btn btn-outline text-base btn-primary" ref={ c => {
+                if(c){
+                    c.onclick = () => {
+                        if(pwdRef.current?.value){
+                            c.disabled = true;
+                            setSignalingInfo({
+                                pwd: pwdRef.current.value,
+                                proxy: proxyIdRef.current?.value && proxyPwdRef.current?.value ?
+                                    {id: proxyIdRef.current.value, pwd: proxyPwdRef.current.value} :
+                                    undefined
+                            });
                         }
                     }
-                }}>connect</button>
-            </div>
+                }
+            }}>connect</button>
             <div>
                 {isConnected && <DesktopOption />}
             </div>
@@ -64,14 +65,16 @@ const DesktopOption = () => {
     const [lock, setLock] = useState<boolean>(false);
 
     return (
-        <>
-            <p>Desktop ID: {impromptu.desktopId} <button onClick={() => {if(impromptu.desktopId){navigator.clipboard.writeText(impromptu.desktopId)}}}>copy</button></p>
+        <div className="text-base">
+            <p>Desktop ID: {impromptu.desktopId} <button className="btn btn-xs btn-outline btn-info" onClick={() => {if(impromptu.desktopId){navigator.clipboard.writeText(impromptu.desktopId)}}}>copy</button></p>
+            <div className="divider divider-primary"></div>
             <FileShare />
+            <div className="divider divider-info"></div>
             <p>
-                <button disabled={lock} onClick={() => setIsHost(!isHost)}>Screen Mode</button>
+                <button className="btn btn-sm btn-outline btn-info" disabled={lock} onClick={() => setIsHost(!isHost)}>Screen Mode</button>
             </p>
             {isHost ? <HostScreen setLock={setLock} /> : <VirtualScreen setLock={setLock} />}
-        </>
+        </div>
     )
 }
 
