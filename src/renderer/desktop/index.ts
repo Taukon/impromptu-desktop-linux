@@ -3,7 +3,7 @@ import { listenAuth, reqAutoProxy } from "./signaling";
 import { ShareHostApp } from "./shareApp/host";
 import { ShareVirtualApp } from "./shareApp/virtual";
 import { ShareFile } from "./shareFile";
-import { signalingAddress, socketOption } from "../config";
+import { config } from "../config";
 
 const setAuth = (desktopId: string, socket: Socket, password: string): void => {
   listenAuth(socket, desktopId, password);
@@ -144,7 +144,7 @@ const initShareFile = (
 
 export class Impromptu {
   public desktopId?: string;
-  private socket: Socket;
+  private socket?: Socket;
   private rtcConfiguration?: RTCConfiguration;
   private shareHostApp?: ShareHostApp;
   private shareVirtualApp?: ShareVirtualApp;
@@ -152,21 +152,22 @@ export class Impromptu {
   private displayNum?: number;
   private shareFile?: ShareFile;
 
-  constructor() {
-    this.socket = io(signalingAddress, socketOption);
-  }
-
   public listenDesktopId(
     callBack: () => void,
     password: string,
     hostOnly: boolean,
     proxy?: { id: string; pwd: string },
   ) {
+    this.socket = io(config.getServerAddress(), config.getSocketOption());
     this.socket.connect();
     this.socket.once(
       "desktopId",
       async (desktopId?: string, rtcConfiguration?: RTCConfiguration) => {
-        if (typeof desktopId === "string" && rtcConfiguration) {
+        if (
+          this.socket?.connected &&
+          typeof desktopId === "string" &&
+          rtcConfiguration
+        ) {
           setAuth(desktopId, this.socket, password);
           this.rtcConfiguration = hostOnly ? {} : rtcConfiguration;
           this.desktopId = desktopId;
@@ -193,7 +194,7 @@ export class Impromptu {
     parent?: HTMLDivElement,
   ): Promise<boolean> {
     if (
-      this.socket.connected &&
+      this.socket?.connected &&
       this.desktopId &&
       this.rtcConfiguration &&
       !this.shareHostApp
@@ -252,7 +253,7 @@ export class Impromptu {
     parent: HTMLDivElement,
   ): Promise<boolean> {
     if (
-      this.socket.connected &&
+      this.socket?.connected &&
       this.desktopId &&
       this.rtcConfiguration &&
       !this.shareVirtualApp
@@ -307,7 +308,7 @@ export class Impromptu {
 
     if (
       displayName === `:${displayNum}` &&
-      this.socket.connected &&
+      this.socket?.connected &&
       this.desktopId &&
       this.rtcConfiguration &&
       !this.shareCLIVirtualApp
@@ -360,7 +361,7 @@ export class Impromptu {
   ): Promise<boolean> {
     if (
       dirPath != "" &&
-      this.socket.connected &&
+      this.socket?.connected &&
       this.desktopId &&
       this.rtcConfiguration &&
       !this.shareFile
