@@ -11,8 +11,8 @@
     "prod": "webpack --mode production --progress",
     "start": "electron .",
     "start2": "electron . --disable-gpu",
-    "lint": "eslint --fix --ext .ts src && prettier --write 'src/**/*.ts'",
-    "lint:ci": "eslint --fix --ext .ts src && prettier --check 'src/**/*.ts'",
+    "lint": "eslint --fix --ext .ts,.tsx src && prettier --write 'src/**/*.{ts,tsx}'",
+    "lint:ci": "eslint --fix --ext .ts,.tsx src && prettier --check 'src/**/*.{ts,tsx}'",
     "pack": "webpack --mode production --progress && node build.js"
   },
   "keywords": [],
